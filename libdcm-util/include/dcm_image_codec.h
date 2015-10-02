@@ -1,0 +1,52 @@
+/*
+ * Copyright (c) 2000 - 2011 Samsung Electronics Co., Ltd. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+#ifndef _DCM_IMAGE_CODEC_H_
+#define _DCM_IMAGE_CODEC_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum {
+	DCM_IMAGE_CODEC_I420,
+	DCM_IMAGE_CODEC_RGB888,
+} dcm_image_codec_type_e;
+
+typedef struct {
+	int size;
+	int width;
+	int height;
+	int origin_width;
+	int origin_height;
+	int alpha;
+	unsigned char *data;
+} dcm_image_info;
+
+
+/* Decoding image with input width and height, if possible (width/height ratio is kept the same as original), and rotate the buffer according to orientation */
+int dcm_decode_image_with_size_orient(const char *file_path, unsigned int target_width, unsigned int target_height, 
+		dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size);
+
+int dcm_decode_image_with_evas(const char *file_path, unsigned int target_width, unsigned int target_height,
+        dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /*_DCM_IMAGE_CODEC_H_*/
