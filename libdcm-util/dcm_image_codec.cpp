@@ -26,46 +26,6 @@
 #include <dcm_image_debug_utils.h>
 #include <dcm_image_codec.h>
 
-#if 0
-static void _dcm_codec_calc_image_size(int ori_width, int ori_height, int tar_width, int tar_height, int *buf_width, int *buf_height)
-{
-
-    *buf_width = 0;
-    *buf_height = 0;
-
-    if (tar_width <= 0 && tar_height <= 0) {
-        dcm_warn("Invalid input decode size! Set decode size to original size");
-        *buf_width = 0;
-        *buf_height = 0;
-        return;
-    }
-
-    if (ori_width <= tar_width && ori_height <= tar_height) {
-        dcm_debug("Original image size is already smaller. Set docode size to original size");
-        /* Make sure that decode buffer size can be divided by 8 (required by YUV420 decoding) */
-        *buf_width = ori_width - (ori_width) % 8;
-        *buf_height = ori_height - (ori_height) % 8;
-        return;
-    }
-
-    if (ori_width > ori_height) {
-        /* Scale image size based on input width */
-        *buf_width = tar_width;
-        *buf_height = (int) (ori_height * (((double) tar_width) / ((double) ori_width)));
-    } else {
-        /* Scale image size based on input height */
-        *buf_height = tar_height;
-        *buf_width = (int) (ori_width * (((double) tar_height) / ((double) ori_height)));
-    }
-
-    /* Make sure that decode buffer size can be divided by 8 (required by YUV420 decoding) */
-    *buf_width = *buf_width - (*buf_width) % 8;
-    *buf_height = *buf_height - (*buf_height) % 8;
-
-	return;
-}
-#endif
-
 int __dcm_decode_image_with_evas(const char *origin_path,
 					int dest_width, int dest_height,
 					dcm_image_info *image_info)
@@ -370,7 +330,7 @@ static int __dcm_decode_image_with_size_orient(const char *file_path, unsigned i
 }
 
 EXPORT_API
-int dcm_decode_image_with_size_orient(const char *file_path, unsigned int target_width, unsigned int target_height, 
+int dcm_decode_image_with_size_orient(const char *file_path, unsigned int target_width, unsigned int target_height,
 	dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size)
 {
 	int ret = DCM_SUCCESS;
@@ -385,7 +345,7 @@ int dcm_decode_image_with_size_orient(const char *file_path, unsigned int target
 
 EXPORT_API
 int dcm_decode_image_with_evas(const char *file_path, unsigned int target_width, unsigned int target_height,
-        dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size)
+	dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size)
 {
 	int ret = DCM_SUCCESS;
 	dcm_image_info image_info = {0, };

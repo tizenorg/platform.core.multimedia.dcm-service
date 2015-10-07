@@ -109,7 +109,7 @@ void __face_detected_cb(mv_source_h source, mv_engine_config_h cfg, mv_rectangle
 		_data->face_rect[i].y = faces_locations[i].point.y;
 		_data->face_rect[i].w = faces_locations[i].width;
 		_data->face_rect[i].h = faces_locations[i].height;
-		_data->face_rect[i].orientation = 0;  /* set to default orientation */
+		_data->face_rect[i].orientation = 0;	/* set to default orientation */
 	}
 
 	_data->count = number_of_faces;

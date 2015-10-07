@@ -39,11 +39,11 @@ typedef struct {
 
 
 /* Decoding image with input width and height, if possible (width/height ratio is kept the same as original), and rotate the buffer according to orientation */
-int dcm_decode_image_with_size_orient(const char *file_path, unsigned int target_width, unsigned int target_height, 
-		dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size);
+int dcm_decode_image_with_size_orient(const char *file_path, unsigned int target_width, unsigned int target_height,
+	dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size);
 
 int dcm_decode_image_with_evas(const char *file_path, unsigned int target_width, unsigned int target_height,
-        dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size);
+	dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size);
 
 #ifdef __cplusplus
 }

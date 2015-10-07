@@ -25,7 +25,6 @@
 #undef LOG_TAG
 #endif
 
-#define _USE_DLOG_
 #define LOG_TAG "DCM_IMAGE_CODEC"
 
 typedef enum {
@@ -39,18 +38,15 @@ typedef enum {
 	DCM_ERROR_UNSUPPORTED_IMAGE_TYPE,
 } DcmErrorType;
 
-/* anci c color type */
-#define FONT_COLOR_RESET    "\033[0m"
-#define FONT_COLOR_RED      "\033[31m"
-#define FONT_COLOR_GREEN    "\033[32m"
-#define FONT_COLOR_YELLOW   "\033[33m"
-#define FONT_COLOR_BLUE     "\033[34m"
-#define FONT_COLOR_PURPLE   "\033[35m"
-#define FONT_COLOR_CYAN     "\033[36m"
-#define FONT_COLOR_GRAY     "\033[37m"
+#define FONT_COLOR_RESET		"\033[0m"
+#define FONT_COLOR_RED			"\033[31m"
+#define FONT_COLOR_GREEN		"\033[32m"
+#define FONT_COLOR_YELLOW		"\033[33m"
+#define FONT_COLOR_BLUE		"\033[34m"
+#define FONT_COLOR_PURPLE		"\033[35m"
+#define FONT_COLOR_CYAN		"\033[36m"
+#define FONT_COLOR_GRAY		"\033[37m"
 
-/*#undef _USE_DLOG_ */
-#ifdef _USE_DLOG_
 #define dcm_debug(fmt, arg...) do { \
 		LOGD(FONT_COLOR_CYAN""fmt""FONT_COLOR_RESET, ##arg); \
 	} while (0)
@@ -64,7 +60,7 @@ typedef enum {
 	} while (0)
 
 #define dcm_error(fmt, arg...) do { \
-		LOGE(FONT_COLOR_RED""fmt""FONT_COLOR_RESET  , ##arg); \
+		LOGE(FONT_COLOR_RED""fmt""FONT_COLOR_RESET, ##arg); \
 	} while (0)
 
 #define dcm_sec_debug(fmt, arg...) do { \
@@ -90,18 +86,7 @@ typedef enum {
 #define dcm_debug_fleave() do { \
 		LOGD(FONT_COLOR_RESET"<Leave>"); \
 	} while (0)
-#else
-#define dcm_debug(fmt, arg...)
-#define dcm_info(fmt, arg...)
-#define dcm_warn(fmt, arg...)
-#define dcm_error(fmt, arg...)
 
-#define dcm_sec_debug(fmt, arg...)
-#define dcm_sec_info(fmt, arg...)
-#define dcm_sec_warn(fmt, arg...)
-#define dcm_sec_error(fmt, arg...)
-
-#endif
 #define dcm_retm_if(expr, fmt, arg...) do { \
 		if(expr) { \
 			dcm_error(fmt, ##arg); \
@@ -128,9 +113,8 @@ typedef enum {
 #define DCM_CHECK_VAL(expr, val) 		dcm_retvm_if(!(expr), val , "Invalid parameter, return ERROR code!")
 #define DCM_CHECK_NULL(expr) 			dcm_retvm_if(!(expr), NULL, "Invalid parameter, return NULL!")
 #define DCM_CHECK_FALSE(expr) 			dcm_retvm_if(!(expr), FALSE, "Invalid parameter, return FALSE!")
-#define DCM_CHECK(expr) 				dcm_retm_if (!(expr),        "Invalid parameter, return!")
+#define DCM_CHECK(expr) 				dcm_retm_if (!(expr), "Invalid parameter, return!")
 
 #define DCM_SAFE_FREE(ptr) { if(ptr) {free(ptr); ptr = NULL;} }
 
 #endif /* _DCM_DEBUG_UTILS_H_ */
-

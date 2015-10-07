@@ -32,7 +32,7 @@
 #define FACE_IMAGE_MAGIC 		(0x1a2b3c4d)
 #define FACE_INVALID_MAGIC 		(0xDEADBEAF)
 
-#define DCM_SAFE_FREE(src)      { if(src) {free(src); src = NULL;}}
+#define DCM_SAFE_FREE(src)	{ if(src) {free(src); src = NULL;}}
 
 typedef struct face_image_s {
 	unsigned char *data;

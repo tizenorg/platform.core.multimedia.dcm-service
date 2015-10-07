@@ -22,9 +22,9 @@
 #include <unistd.h>
 
 /*
-  * Definitions defined here can be used by all threads
-  * If a definition can only be used in a specific thread, then this definition should be defined in that thread, not here.
-  */
+ * Definitions defined here can be used by all threads
+ * If a definition can only be used in a specific thread, then this definition should be defined in that thread, not here.
+ */
 
 #define DCM_MAX_PATH_SIZE 4096
 #define DCM_IPC_MSG_MAX_SIZE 4096

@@ -41,39 +41,39 @@
 
 class DcmScanSvc {
 public:
-    GMainLoop *g_scan_thread_mainloop;
-    GMainContext *scan_thread_main_context;
+	GMainLoop *g_scan_thread_mainloop;
+	GMainContext *scan_thread_main_context;
 
-    /* scan all images */
-    GList *scan_all_item_list;
-    unsigned int scan_all_curr_index;
+	/* scan all images */
+	GList *scan_all_item_list;
+	unsigned int scan_all_curr_index;
 
-    /* scan single images */
-    GList *scan_single_item_list;
-    unsigned int scan_single_curr_index;
+	/* scan single images */
+	GList *scan_single_item_list;
+	unsigned int scan_single_curr_index;
 
-    void quitScanThread();
-    int getMmcState(void);
-    int prepareImageList();
+	void quitScanThread();
+	int getMmcState(void);
+	int prepareImageList();
 	int prepareImageListByPath(const char *file_path);
-    int clearAllItemList();
-    int clearSingleItemList();
-    int initialize();
-    int finalize();
-    int sendCompletedMsg(const char *msg, DcmIpcPortType port);
-    int getScanStatus(DcmScanItem *scan_item, bool *media_scanned);
-    int runScanProcess(DcmScanItem *scan_item);
-    int ScanAllItems();
-    int ScanSingleItem(const char *file_path);
-    int terminateScanOperations();
-    int receiveMsg(DcmIpcMsg *recv_msg);
+	int clearAllItemList();
+	int clearSingleItemList();
+	int initialize();
+	int finalize();
+	int sendCompletedMsg(const char *msg, DcmIpcPortType port);
+	int getScanStatus(DcmScanItem *scan_item, bool *media_scanned);
+	int runScanProcess(DcmScanItem *scan_item);
+	int ScanAllItems();
+	int ScanSingleItem(const char *file_path);
+	int terminateScanOperations();
+	int receiveMsg(DcmIpcMsg *recv_msg);
 
 };
 
 namespace DcmScanCallback {
-void freeScanItem(void *data);
-gboolean readyScanThreadIdle(gpointer data);
-gboolean readMsg(GIOChannel *src, GIOCondition condition, gpointer data);
+	void freeScanItem(void *data);
+	gboolean readyScanThreadIdle(gpointer data);
+	gboolean readMsg(GIOChannel *src, GIOCondition condition, gpointer data);
 }
 
 void DcmScanSvc::quitScanThread()

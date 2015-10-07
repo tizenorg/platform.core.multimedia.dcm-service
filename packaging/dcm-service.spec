@@ -1,5 +1,5 @@
 Name:       dcm-service
-Summary:    Multimedia DCM(Digital Contents Management) Service 
+Summary:    Multimedia DCM(Digital Contents Management) Service
 Version:    0.0.1
 Release:    0
 Group:      Multimedia/Service

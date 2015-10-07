@@ -22,21 +22,17 @@
 #undef LOG_TAG
 #endif
 
-#define _USE_DLOG_
 #define LOG_TAG "DCM_FACE"
 
-/* anci c color type */
-#define FONT_COLOR_RESET    "\033[0m"
-#define FONT_COLOR_RED      "\033[31m"
-#define FONT_COLOR_GREEN    "\033[32m"
-#define FONT_COLOR_YELLOW   "\033[33m"
-#define FONT_COLOR_BLUE     "\033[34m"
-#define FONT_COLOR_PURPLE   "\033[35m"
-#define FONT_COLOR_CYAN     "\033[36m "
-#define FONT_COLOR_GRAY     "\033[37m"
+#define FONT_COLOR_RESET		"\033[0m"
+#define FONT_COLOR_RED			"\033[31m"
+#define FONT_COLOR_GREEN		"\033[32m"
+#define FONT_COLOR_YELLOW		"\033[33m"
+#define FONT_COLOR_BLUE		"\033[34m"
+#define FONT_COLOR_PURPLE		"\033[35m"
+#define FONT_COLOR_CYAN		"\033[36m"
+#define FONT_COLOR_GRAY		"\033[37m"
 
-/*#undef _USE_DLOG_ */
-#ifdef _USE_DLOG_
 #define dcm_debug(fmt, arg...) do { \
 		LOGD(FONT_COLOR_CYAN""fmt""FONT_COLOR_RESET, ##arg); \
 	} while (0)
@@ -88,17 +84,6 @@
 				return (val); \
 			} \
 		} while (0)
-#else
-#define dcm_debug(fmt, arg...)
-#define dcm_info(fmt, arg...)
-#define dcm_warn(fmt, arg...)
-#define dcm_error(fmt, arg...)
-
-#define dcm_sec_debug(fmt, arg...)
-#define dcm_sec_info(fmt, arg...)
-#define dcm_sec_warn(fmt, arg...)
-#define dcm_sec_error(fmt, arg...)
-#endif
 
 
 #endif /*__FACE_DEBUG_H__ */
