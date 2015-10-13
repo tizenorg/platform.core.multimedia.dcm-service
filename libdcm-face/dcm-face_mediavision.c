@@ -40,23 +40,23 @@ static face_error_e __convert_to_mv_error_e(mv_error_e err)
 		dcm_error("Error from media vision : %d", err);
 
 	switch (err) {
-		case MEDIA_VISION_ERROR_NONE:
-			return FACE_ERROR_NONE;
+	case MEDIA_VISION_ERROR_NONE:
+		return FACE_ERROR_NONE;
 
-		case MEDIA_VISION_ERROR_NOT_SUPPORTED:
-			return FACE_ERROR_INVALID_PARAMTER;
+	case MEDIA_VISION_ERROR_NOT_SUPPORTED:
+		return FACE_ERROR_INVALID_PARAMTER;
 
-		case MEDIA_VISION_ERROR_INVALID_PARAMETER:
-			return FACE_ERROR_INVALID_PARAMTER;
+	case MEDIA_VISION_ERROR_INVALID_PARAMETER:
+		return FACE_ERROR_INVALID_PARAMTER;
 
-		case MEDIA_VISION_ERROR_NOT_SUPPORTED_FORMAT:
-			return FACE_ERROR_INVALID_PARAMTER;
+	case MEDIA_VISION_ERROR_NOT_SUPPORTED_FORMAT:
+		return FACE_ERROR_INVALID_PARAMTER;
 
-		case MEDIA_VISION_ERROR_OUT_OF_MEMORY:
-			return FACE_ERROR_OUT_OF_MEMORY;
+	case MEDIA_VISION_ERROR_OUT_OF_MEMORY:
+		return FACE_ERROR_OUT_OF_MEMORY;
 
-		default:
-			break;
+	default:
+		break;
 	}
 
 	return FACE_ERROR_OPERATION_FAILED;
@@ -65,16 +65,16 @@ static face_error_e __convert_to_mv_error_e(mv_error_e err)
 static int __convert_to_mv_colorspace_e(face_image_colorspace_e src, mv_colorspace_e *dst)
 {
 	switch (src) {
-		case FACE_IMAGE_COLORSPACE_YUV420:
-			*dst = MEDIA_VISION_COLORSPACE_I420;
-			return FACE_ERROR_NONE;
-		case FACE_IMAGE_COLORSPACE_RGB888:
-			*dst = MEDIA_VISION_COLORSPACE_RGB888;
-			return FACE_ERROR_NONE;
-		default:
-			*dst = MEDIA_VISION_COLORSPACE_INVALID;
-			dcm_error("Unknown colorspace : %d", src);
-			break;
+	case FACE_IMAGE_COLORSPACE_YUV420:
+		*dst = MEDIA_VISION_COLORSPACE_I420;
+		return FACE_ERROR_NONE;
+	case FACE_IMAGE_COLORSPACE_RGB888:
+		*dst = MEDIA_VISION_COLORSPACE_RGB888;
+		return FACE_ERROR_NONE;
+	default:
+		*dst = MEDIA_VISION_COLORSPACE_INVALID;
+		dcm_error("Unknown colorspace : %d", src);
+		break;
 	}
 
 	return FACE_ERROR_INVALID_PARAMTER;

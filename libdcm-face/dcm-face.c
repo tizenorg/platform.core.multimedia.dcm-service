@@ -21,20 +21,20 @@
 #include "dcm-face_priv.h"
 
 
-#define FACE_MAGIC_VALID 	(0xFF993311)
-#define FACE_MAGIC_INVALID 	(0x393A3B3C)
+#define FACE_MAGIC_VALID	(0xFF993311)
+#define FACE_MAGIC_INVALID	(0x393A3B3C)
 
 EXPORT_API int dcm_face_create(__inout dcm_face_h *handle)
 {
 	int ret = FACE_ERROR_NONE;
 
-	dcm_retvm_if (handle == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid handle");
+	dcm_retvm_if(handle == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid handle");
 
 	FaceHandleT *pFaceHandle = (FaceHandleT *)calloc(1, sizeof(FaceHandleT));
-	dcm_retvm_if (pFaceHandle == NULL, FACE_ERROR_OUT_OF_MEMORY, "malloc fail");
+	dcm_retvm_if(pFaceHandle == NULL, FACE_ERROR_OUT_OF_MEMORY, "malloc fail");
 
 	ret = _face_handle_create(&(pFaceHandle->fengine));
-	dcm_retvm_if (ret != FACE_ERROR_NONE, ret, "fail to _face_handle_create");
+	dcm_retvm_if(ret != FACE_ERROR_NONE, ret, "fail to _face_handle_create");
 
 	pFaceHandle->magic = FACE_MAGIC_VALID;
 
@@ -50,7 +50,7 @@ EXPORT_API int dcm_face_destroy(__in dcm_face_h handle)
 	int ret = FACE_ERROR_NONE;
 	dcm_info("face destroy. handle=0x%08x", handle);
 
-	dcm_retvm_if (handle == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid handle");
+	dcm_retvm_if(handle == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid handle");
 
 	ret = _face_handle_destroy(handle->fengine);
 	if (ret != FACE_ERROR_NONE) {
@@ -70,8 +70,8 @@ EXPORT_API int dcm_face_destroy(__in dcm_face_h handle)
 
 EXPORT_API int dcm_face_get_prefered_colorspace(__in dcm_face_h handle, __out face_image_colorspace_e *colorspace)
 {
-	dcm_retvm_if (handle == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid handle");
-	dcm_retvm_if (colorspace == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid colorspace");
+	dcm_retvm_if(handle == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid handle");
+	dcm_retvm_if(colorspace == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid colorspace");
 
 	*colorspace = FACE_IMAGE_COLORSPACE_RGB888;
 
@@ -85,18 +85,18 @@ EXPORT_API int dcm_face_set_image_info(dcm_face_h handle, face_image_colorspace_
 
 	dcm_debug_fenter();
 
-	dcm_retvm_if (handle == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid handle");
-	dcm_retvm_if (buffer == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid buffer");
+	dcm_retvm_if(handle == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid handle");
+	dcm_retvm_if(buffer == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid buffer");
 
 	switch (colorspace) {
-		case FACE_IMAGE_COLORSPACE_YUV420:
-		case FACE_IMAGE_COLORSPACE_RGB888:
-			data = (unsigned char *)calloc(1, size);
-			memcpy(data, buffer, size);
-			break;
-		default:
-			dcm_error("Invalid colorspace : [%d]", colorspace);
-			return FACE_ERROR_INVALID_PARAMTER;
+	case FACE_IMAGE_COLORSPACE_YUV420:
+	case FACE_IMAGE_COLORSPACE_RGB888:
+		data = (unsigned char *)calloc(1, size);
+		memcpy(data, buffer, size);
+		break;
+	default:
+		dcm_error("Invalid colorspace : [%d]", colorspace);
+		return FACE_ERROR_INVALID_PARAMTER;
 	}
 
 	if (_handle->image_info != NULL)
@@ -129,13 +129,12 @@ EXPORT_API int dcm_face_get_face_info(__in dcm_face_h handle, __out face_info_s 
 
 	dcm_debug_fenter();
 
-	dcm_retvm_if (handle == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid handle");
-	dcm_retvm_if (face_info == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid face_info");
+	dcm_retvm_if(handle == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid handle");
+	dcm_retvm_if(face_info == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid face_info");
 
 	ret = _face_detect_faces(handle, &(face_info->rects), &(face_info->count));
-	if (ret != FACE_ERROR_NONE) {
+	if (ret != FACE_ERROR_NONE)
 		dcm_error("fail to _face_detect_faces");
-	}
 
 	dcm_debug_fleave();
 
@@ -144,7 +143,7 @@ EXPORT_API int dcm_face_get_face_info(__in dcm_face_h handle, __out face_info_s 
 
 EXPORT_API int dcm_face_destroy_face_info(face_info_s *face_info)
 {
-	dcm_retvm_if (face_info == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid face_info");
+	dcm_retvm_if(face_info == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid face_info");
 
 	DCM_SAFE_FREE(face_info->rects);
 	DCM_SAFE_FREE(face_info);
