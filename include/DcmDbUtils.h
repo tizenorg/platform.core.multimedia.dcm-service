@@ -47,7 +47,6 @@ public:
 	int _dcm_svc_db_update_color_to_db(const DcmColorItem color);
 	int _dcm_svc_db_insert_face_to_face_scan_list(DcmScanItem *scan_item);
 	int _dcm_svc_db_check_scanned_by_media_uuid(const char *media_uuid, bool *media_scanned);
-	int _dcm_svc_db_send_noti(DcmFaceItem *face, DcmFaceItemUpdateItem update_item, DcmFaceItemUpdateType update_type);
 };
 
 #endif /*_DCM_DB_UTILS_H_*/

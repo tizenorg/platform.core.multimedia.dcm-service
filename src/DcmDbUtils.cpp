@@ -523,33 +523,12 @@ int DcmDbUtils::_dcm_svc_db_check_scanned_by_media_uuid(const char *media_uuid, 
 	count = sqlite3_column_int(sql_stmt, 0);
 
 	DCM_SQLITE3_FINALIZE(sql_stmt);
+	DCM_SQLITE3_FREE(query_string);
 
 	if (count > 0)
 		*media_scanned = TRUE;
 	else
 		*media_scanned = FALSE;
-
-	dcm_debug_fleave();
-
-	return ret;
-}
-
-int DcmDbUtils::_dcm_svc_db_send_noti(DcmFaceItem *face, DcmFaceItemUpdateItem update_item, DcmFaceItemUpdateType update_type)
-{
-	int ret = MS_MEDIA_ERR_NONE;
-
-	dcm_debug_fenter();
-
-	if (face == NULL)
-	{
-		//ret = DCM_ERROR_INVALID_PARAMETER;
-	} else {
-		//ret = media_face_db_update_send((media_face_item_type_e)update_item, (media_face_item_update_type_e)update_type, face->media_id, face->face_uuid);
-	}
-
-	if (ret != MS_MEDIA_ERR_NONE) {
-		dcm_error("Failed to send noti after update db! err: %d, %s", ret, sqlite3_errmsg((sqlite3 *)db_handle));
-	}
 
 	dcm_debug_fleave();
 
