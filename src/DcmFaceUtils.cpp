@@ -175,7 +175,6 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 		}
 
 		/* Send db updated notification */
-		dcmDbUtils->_dcm_svc_db_send_noti(face, DCM_FACE_ITEM_UPDATE_FACE, DCM_FACE_ITEM_INSERT);
 		if (face != NULL) {
 			DcmFaceApi::freeDcmFaceItem(face);
 			face = NULL;
@@ -184,7 +183,10 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 
 DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED:
 
-	dcmDbUtils->_dcm_svc_db_insert_face_to_face_scan_list(scan_item);
+	err = dcmDbUtils->_dcm_svc_db_insert_face_to_face_scan_list(scan_item);
+	if (err != DCM_SUCCESS) {
+		dcm_error("Failed to insert face item into face_scan_list! err: %d", err);
+	}
 
 	if (face_info != NULL) {
 		dcm_face_destroy_face_info(face_info);

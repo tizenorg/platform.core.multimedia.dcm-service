@@ -474,7 +474,7 @@ int DcmScanSvc::receiveMsg(DcmIpcMsg *recv_msg)
 	ret = dcmDbUtils->_dcm_svc_db_connect(recv_msg->uid);
 	if (ret != MS_MEDIA_ERR_NONE) {
 		dcm_error("Failed to connect DB! err: %d", ret);
-		return ret;
+		return DCM_ERROR_DB_OPERATION;
 	}
 
 	if (recv_msg->msg_type == DCM_IPC_MSG_SCAN_ALL)
@@ -513,7 +513,7 @@ int DcmScanSvc::receiveMsg(DcmIpcMsg *recv_msg)
 	ret = dcmDbUtils->_dcm_svc_db_disconnect();
 	if (ret != DCM_SUCCESS) {
 		dcm_error("Failed to disconnect DB! err: %d", ret);
-		return FALSE;
+		return DCM_ERROR_DB_OPERATION;
 	}
 
 	return ret;

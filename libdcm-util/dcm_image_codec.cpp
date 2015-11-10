@@ -25,6 +25,7 @@
 #include <mm_util_imgp.h>
 #include <dcm_image_debug_utils.h>
 #include <dcm_image_codec.h>
+#include <DcmTypes.h>
 
 int __dcm_decode_image_with_evas(const char *origin_path,
 					int dest_width, int dest_height,

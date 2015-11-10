@@ -405,7 +405,8 @@ int DcmDbUtils::_dcm_svc_db_generate_uuid(DcmFaceItem **face)
 
 int DcmDbUtils::_dcm_svc_db_insert_face_to_db(DcmFaceItem *face)
 {
-	int ret = MS_MEDIA_ERR_NONE;
+	int ret = DCM_SUCCESS;
+	int err = MS_MEDIA_ERR_NONE;
 	char* query_string = NULL;
 
 	dcm_debug_fenter();
@@ -424,9 +425,10 @@ int DcmDbUtils::_dcm_svc_db_insert_face_to_db(DcmFaceItem *face)
 	dcm_debug("query is %s", query_string);
 
 	g_mutex_trylock(&gMutexLock);
-	ret = media_db_request_update_db(query_string, dcm_uid);
-	if (ret != MS_MEDIA_ERR_NONE) {
+	err = media_db_request_update_db(query_string, dcm_uid);
+	if (err != MS_MEDIA_ERR_NONE) {
 		dcm_error("media_db_request_update_db fail = %d, %s", ret, sqlite3_errmsg((sqlite3 *)db_handle));
+		ret = DCM_ERROR_DB_OPERATION;
 	}
 	g_mutex_unlock(&gMutexLock);
 
@@ -439,7 +441,8 @@ int DcmDbUtils::_dcm_svc_db_insert_face_to_db(DcmFaceItem *face)
 
 int DcmDbUtils::_dcm_svc_db_insert_face_to_face_scan_list(DcmScanItem *scan_item)
 {
-	int ret = MS_MEDIA_ERR_NONE;
+	int ret = DCM_SUCCESS;
+	int err = MS_MEDIA_ERR_NONE;
 	char* query_string = NULL;
 
 	dcm_debug_fenter();
@@ -458,9 +461,10 @@ int DcmDbUtils::_dcm_svc_db_insert_face_to_face_scan_list(DcmScanItem *scan_item
 	dcm_debug("query is %s", query_string);
 
 	g_mutex_trylock(&gMutexLock);
-	ret = media_db_request_update_db(query_string, dcm_uid);
-	if (ret != MS_MEDIA_ERR_NONE) {
+	err = media_db_request_update_db(query_string, dcm_uid);
+	if (err != MS_MEDIA_ERR_NONE) {
 		dcm_error("media_db_request_update_db is failed: %d, %s", ret, sqlite3_errmsg((sqlite3 *)db_handle));
+		ret = DCM_ERROR_DB_OPERATION;
 	}
 	g_mutex_unlock(&gMutexLock);
 
@@ -473,7 +477,8 @@ int DcmDbUtils::_dcm_svc_db_insert_face_to_face_scan_list(DcmScanItem *scan_item
 
 int DcmDbUtils::_dcm_svc_db_update_color_to_db(DcmColorItem color)
 {
-	int ret = MS_MEDIA_ERR_NONE;
+	int ret = DCM_SUCCESS;
+	int err = MS_MEDIA_ERR_NONE;
 	char* query_string = NULL;
 
 	dcm_debug_fenter();
@@ -486,9 +491,10 @@ int DcmDbUtils::_dcm_svc_db_update_color_to_db(DcmColorItem color)
 	dcm_debug("query is %s", query_string);
 
 	g_mutex_trylock(&gMutexLock);
-	ret = media_db_request_update_db(query_string, dcm_uid);
-	if (ret != MS_MEDIA_ERR_NONE) {
+	err = media_db_request_update_db(query_string, dcm_uid);
+	if (err != MS_MEDIA_ERR_NONE) {
 		dcm_error("media_db_request_update_db fail = %d, %s", ret, sqlite3_errmsg((sqlite3 *)db_handle));
+		ret = DCM_ERROR_DB_OPERATION;
 	}
 	g_mutex_unlock(&gMutexLock);
 
@@ -523,33 +529,12 @@ int DcmDbUtils::_dcm_svc_db_check_scanned_by_media_uuid(const char *media_uuid, 
 	count = sqlite3_column_int(sql_stmt, 0);
 
 	DCM_SQLITE3_FINALIZE(sql_stmt);
+	DCM_SQLITE3_FREE(query_string);
 
 	if (count > 0)
 		*media_scanned = TRUE;
 	else
 		*media_scanned = FALSE;
-
-	dcm_debug_fleave();
-
-	return ret;
-}
-
-int DcmDbUtils::_dcm_svc_db_send_noti(DcmFaceItem *face, DcmFaceItemUpdateItem update_item, DcmFaceItemUpdateType update_type)
-{
-	int ret = MS_MEDIA_ERR_NONE;
-
-	dcm_debug_fenter();
-
-	if (face == NULL)
-	{
-		//ret = DCM_ERROR_INVALID_PARAMETER;
-	} else {
-		//ret = media_face_db_update_send((media_face_item_type_e)update_item, (media_face_item_update_type_e)update_type, face->media_id, face->face_uuid);
-	}
-
-	if (ret != MS_MEDIA_ERR_NONE) {
-		dcm_error("Failed to send noti after update db! err: %d, %s", ret, sqlite3_errmsg((sqlite3 *)db_handle));
-	}
 
 	dcm_debug_fleave();
 
