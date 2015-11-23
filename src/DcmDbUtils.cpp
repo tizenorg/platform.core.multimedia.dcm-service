@@ -529,7 +529,6 @@ int DcmDbUtils::_dcm_svc_db_check_scanned_by_media_uuid(const char *media_uuid, 
 	count = sqlite3_column_int(sql_stmt, 0);
 
 	DCM_SQLITE3_FINALIZE(sql_stmt);
-	DCM_SQLITE3_FREE(query_string);
 
 	if (count > 0)
 		*media_scanned = TRUE;
