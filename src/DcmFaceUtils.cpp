@@ -115,7 +115,12 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 		goto DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED;
 	}
 
-	face_info = (face_info_s*)g_malloc0(sizeof(face_info_s));
+	face_info = (face_info_s *)g_malloc0(sizeof(face_info_s));
+	if (face_info == NULL) {
+		dcm_error("Failed to allocate face info");
+		ret = DCM_ERROR_OUT_OF_MEMORY;
+		goto DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED;
+	}
 
 	err = dcm_face_get_face_info(dcm_face_handle, face_info);
 	if (err != FACE_ERROR_NONE) {
@@ -175,10 +180,8 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 		}
 
 		/* Send db updated notification */
-		if (face != NULL) {
-			DcmFaceApi::freeDcmFaceItem(face);
-			face = NULL;
-		}
+		DcmFaceApi::freeDcmFaceItem(face);
+		face = NULL;
 	}
 
 DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED:
@@ -188,9 +191,8 @@ DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED:
 		dcm_error("Failed to insert face item into face_scan_list! err: %d", err);
 	}
 
-	if (face_info != NULL) {
+	if (face_info != NULL && face_info->count > 0) {
 		dcm_face_destroy_face_info(face_info);
-		face_info = NULL;
 	}
 
 	if (face != NULL) {

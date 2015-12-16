@@ -34,7 +34,11 @@ EXPORT_API int dcm_face_create(__inout dcm_face_h *handle)
 	dcm_retvm_if(pFaceHandle == NULL, FACE_ERROR_OUT_OF_MEMORY, "malloc fail");
 
 	ret = _face_handle_create(&(pFaceHandle->fengine));
-	dcm_retvm_if(ret != FACE_ERROR_NONE, ret, "fail to _face_handle_create");
+	if (ret != FACE_ERROR_NONE) {
+		dcm_error("fail to _face_handle_create");
+		dcm_face_destroy((dcm_face_h)pFaceHandle);
+		return ret;
+	}
 
 	pFaceHandle->magic = FACE_MAGIC_VALID;
 
@@ -91,6 +95,7 @@ EXPORT_API int dcm_face_set_image_info(dcm_face_h handle, face_image_colorspace_
 	switch (colorspace) {
 	case FACE_IMAGE_COLORSPACE_YUV420:
 	case FACE_IMAGE_COLORSPACE_RGB888:
+	case FACE_IMAGE_COLORSPACE_RGBA:
 		data = (unsigned char *)calloc(1, size);
 		memcpy(data, buffer, size);
 		break;

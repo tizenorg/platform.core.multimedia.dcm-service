@@ -127,10 +127,6 @@ int DcmIpcUtils::createSocket(int *socket_fd, DcmIpcPortType port)
 	/* change permission of local socket file */
 	if (chmod(DCM_IPC_PATH[port], 0660) < 0)
 		dcm_error("chmod failed [%s]", strerror(errno));
-	/*
-	if (chown(DCM_IPC_PATH[port], 0, 5000) < 0)
-		dcm_dbgE("chown failed [%s]", strerror(errno));
-	*/
 
 	*socket_fd = sock;
 

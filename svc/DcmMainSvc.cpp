@@ -58,7 +58,7 @@ static DcmMainSvc* DcmMainSvc::getInstance(void)
 
 void DcmMainSvc::dcmServiceStartjobs(void)
 {
-	/* Send ready response to thumbnail-server */
+	/* Send ready response to dcm launcher */
 	if (DcmIpcUtils::sendSocketMsg(DCM_IPC_MSG_SERVICE_READY, 0, NULL, DCM_IPC_PORT_THUMB_RECV) != DCM_SUCCESS) {
 		dcm_error("Failed to send ready message");
 	}
