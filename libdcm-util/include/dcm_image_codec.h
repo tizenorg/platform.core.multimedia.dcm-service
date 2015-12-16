@@ -18,13 +18,19 @@
 #ifndef _DCM_IMAGE_CODEC_H_
 #define _DCM_IMAGE_CODEC_H_
 
+#define DEGREE_0		0
+#define DEGREE_90		1
+#define DEGREE_180		2
+#define DEGREE_270		3
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef enum {
 	DCM_IMAGE_CODEC_I420,
-	DCM_IMAGE_CODEC_RGB888,
+	DCM_IMAGE_CODEC_RGB,
+	DCM_IMAGE_CODEC_RGBA,
 } dcm_image_codec_type_e;
 
 typedef struct {
@@ -38,12 +44,8 @@ typedef struct {
 } dcm_image_info;
 
 
-/* Decoding image with input width and height, if possible (width/height ratio is kept the same as original), and rotate the buffer according to orientation */
-int dcm_decode_image_with_size_orient(const char *file_path, unsigned int target_width, unsigned int target_height,
-	dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size);
-
-int dcm_decode_image_with_evas(const char *file_path, unsigned int target_width, unsigned int target_height,
-	dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size);
+int dcm_decode_image(const char *file_path,	dcm_image_codec_type_e decode_type, const char* mimne_type, 
+	bool resize, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int orientation, unsigned int *size);
 
 #ifdef __cplusplus
 }

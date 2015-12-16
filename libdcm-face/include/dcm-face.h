@@ -102,7 +102,7 @@ int dcm_face_get_face_info(dcm_face_h handle, face_info_s *face_info);
  * @retval #FACE_ERROR_INVALID_PARAMTER Invalid parameter
  * @see dcm_face_get_face_info()
  */
-int dcm_face_destroy_face_info(face_info_s *face_info);
+int dcm_face_destroy_face_info(face_info_s face_info);
 
 /**
  * @}
