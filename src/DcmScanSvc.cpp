@@ -33,7 +33,6 @@
 #include <DcmScanSvc.h>
 #include <DcmMainSvc.h>
 #include <DcmDebugUtils.h>
-#include <Ecore_Evas.h>
 
 #define MIME_TYPE_JPEG "image/jpeg"
 #define MIME_TYPE_PNG "image/png"
@@ -202,7 +201,7 @@ int DcmScanSvc::initialize()
 
 	DcmFaceUtils::initialize();
 
-	ecore_evas_init();
+//	ecore_evas_init();
 
 	return DCM_SUCCESS;
 }
@@ -214,7 +213,7 @@ int DcmScanSvc::finalize()
 	clearSingleItemList();
 	DcmFaceUtils::finalize();
 
-	ecore_evas_shutdown();
+//	ecore_evas_shutdown();
 
 	return DCM_SUCCESS;
 }
@@ -265,7 +264,7 @@ int DcmScanSvc::runScanProcess(DcmScanItem *scan_item)
 
 	DcmImageInfo image_info = {0, };
 	memset(&image_info, 0, sizeof(DcmImageInfo));
-	dcm_image_codec_type_e image_format = DCM_IMAGE_CODEC_RGB888;
+	dcm_image_codec_type_e image_format = DCM_IMAGE_CODEC_RGBA;
 
 	/* Process scan operation if the file exists */
 	if (g_file_test(scan_item->file_path, (GFileTest)(G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR)) == TRUE) {
@@ -295,6 +294,7 @@ int DcmScanSvc::runScanProcess(DcmScanItem *scan_item)
 
 		image_info.original_width = scan_item->image_width;
 		image_info.original_height = scan_item->image_height;
+		image_info.orientation = scan_item->image_orientation;
 
 		dcm_debug("scan media w : [%d], h : [%d], orientation : [%d]", image_info.original_width, image_info.original_height, scan_item->image_orientation);
 
@@ -308,6 +308,22 @@ int DcmScanSvc::runScanProcess(DcmScanItem *scan_item)
 			dcm_debug("ImgGetImageInfo type: %d, width: %d, height: %d", type, image_info.original_width, image_info.original_height);
 		}
 
+		if ((strcmp(scan_item->mime_type, MIME_TYPE_JPEG) == 0) || 
+			(strcmp(scan_item->mime_type, MIME_TYPE_PNG) == 0) ||
+			(strcmp(scan_item->mime_type, MIME_TYPE_BMP) == 0)) {
+			ret = dcm_decode_image((const char *) (scan_item->file_path),
+				image_format, scan_item->mime_type, FALSE, &(image_info.pixel),
+				&(image_info.buffer_width), &(image_info.buffer_height), image_info.orientation, &(image_info.size));
+			if (ret != DCM_SUCCESS) {
+				dcm_error("Failed dcm_decode_image! err: %d", ret);
+				return ret;
+			}
+		} else {
+			dcm_error("Failed not supported type! (%s)", scan_item->mime_type);
+			return DCM_ERROR_INVALID_PARAMETER;
+		}
+
+#if 0
 		if (strcmp(scan_item->mime_type, MIME_TYPE_JPEG) == 0) {
 			ret = dcm_decode_image_with_size_orient((const char *) (scan_item->file_path), image_info.original_width,
 				image_info.original_height, image_format, &(image_info.pixel), &(image_info.buffer_width), &(image_info.buffer_height), &(image_info.orientation), &(image_info.size));
@@ -326,6 +342,7 @@ int DcmScanSvc::runScanProcess(DcmScanItem *scan_item)
 			dcm_error("Failed not supported type! (%s)", scan_item->mime_type);
 			return DCM_ERROR_INVALID_PARAMETER;
 		}
+#endif
 		image_info.decode_type = (DcmImageDecodeType)image_format;
 
 		dcm_debug("Image info width: %d, height: %d, buf_width: %d, buf_height: %d, orientation: %d",
@@ -338,13 +355,13 @@ int DcmScanSvc::runScanProcess(DcmScanItem *scan_item)
 		}
 
 		/* Set sleep time after face recognition */
-		usleep(500000);
+		//usleep(500000);
 
 		/* Process color extract */
-		ret = DcmColorUtils::runColorExtractProcess(scan_item, &image_info);
+		/*ret = DcmColorUtils::runColorExtractProcess(scan_item, &image_info);
 		if (ret != DCM_SUCCESS) {
 			dcm_error("Failed to process color extraction! err: %d", ret);
-		}
+		}*/
 
 		/* Free image buffer */
 		DCM_SAFE_FREE(image_info.pixel);
@@ -625,13 +642,6 @@ gboolean DcmScanMain::runScanThread(void *data)
 
 	DCM_CHECK_VAL(data, DCM_ERROR_INVALID_PARAMETER);
 
-	/* Init global variables */
-	err = dcmScanSvc.initialize();
-	if (err != DCM_SUCCESS) {
-		dcm_error("Failed to initialize scan thread global variable! err: %d", err);
-		goto DCM_SVC_SCAN_CREATE_SCAN_THREAD_FAILED;
-	}
-
 	/* Create TCP Socket to receive message from main thread */
 	err = DcmIpcUtils::createSocket(&socket_fd, DCM_IPC_PORT_SCAN_RECV);
 	if (err != DCM_SUCCESS) {
@@ -639,6 +649,13 @@ gboolean DcmScanMain::runScanThread(void *data)
 		goto DCM_SVC_SCAN_CREATE_SCAN_THREAD_FAILED;
 	}
 	dcm_sec_warn("scan thread recv socket: %d", socket_fd);
+
+	/* Init global variables */
+	err = dcmScanSvc.initialize();
+	if (err != DCM_SUCCESS) {
+		dcm_error("Failed to initialize scan thread global variable! err: %d", err);
+		goto DCM_SVC_SCAN_CREATE_SCAN_THREAD_FAILED;
+	}
 
 	/* Create a new main context for scan thread */
 	context = g_main_context_new();

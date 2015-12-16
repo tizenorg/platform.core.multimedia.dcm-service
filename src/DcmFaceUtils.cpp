@@ -87,7 +87,7 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 	double scale_factor = 0.0;
 	int err = FACE_ERROR_NONE;
 	int ret = DCM_SUCCESS;
-	face_info_s *face_info = NULL;
+	face_info_s face_info;
 
 	dcm_debug_fenter();
 
@@ -115,17 +115,17 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 		goto DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED;
 	}
 
-	face_info = (face_info_s*)g_malloc0(sizeof(face_info_s));
+	memset(&face_info, 0x00, sizeof(face_info_s));
 
-	err = dcm_face_get_face_info(dcm_face_handle, face_info);
+	err = dcm_face_get_face_info(dcm_face_handle, &face_info);
 	if (err != FACE_ERROR_NONE) {
 		dcm_error("Failed to get face info! err: %d", err);
 		ret = DCM_ERROR_FACE_ENGINE_FAILED;
 		goto DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED;
 	}
 
-	dcm_warn("detected face count: %d", face_info->count);
-	if (face_info->count <= 0) {
+	dcm_warn("detected face count: %d", face_info.count);
+	if (face_info.count <= 0) {
 		goto DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED;
 	}
 
@@ -133,7 +133,7 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 	scale_factor = DcmFaceApi::caculateScaleFactor(image_info);
 
 	/* Insert every face rectangle into database */
-	for (i = 0; i < face_info->count; i++) {
+	for (i = 0; i < face_info.count; i++) {
 		face = NULL;
 
 		err = DcmFaceApi::createFaceItem(&face);
@@ -144,17 +144,17 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 		}
 
 		if (scale_factor > 1.0) {
-			face->face_rect_x = (int) (face_info->rects[i].x * scale_factor);
-			face->face_rect_y = (int) (face_info->rects[i].y * scale_factor);
-			face->face_rect_w = (int) (face_info->rects[i].w * scale_factor);
-			face->face_rect_h = (int) (face_info->rects[i].h * scale_factor);
+			face->face_rect_x = (int) (face_info.rects[i].x * scale_factor);
+			face->face_rect_y = (int) (face_info.rects[i].y * scale_factor);
+			face->face_rect_w = (int) (face_info.rects[i].w * scale_factor);
+			face->face_rect_h = (int) (face_info.rects[i].h * scale_factor);
 		} else {
-			face->face_rect_x = face_info->rects[i].x;
-			face->face_rect_y = face_info->rects[i].y;
-			face->face_rect_w = face_info->rects[i].w;
-			face->face_rect_h = face_info->rects[i].h;
+			face->face_rect_x = face_info.rects[i].x;
+			face->face_rect_y = face_info.rects[i].y;
+			face->face_rect_w = face_info.rects[i].w;
+			face->face_rect_h = face_info.rects[i].h;
 		}
-		face->orientation = face_info->rects[i].orientation;
+		face->orientation = face_info.rects[i].orientation;
 
 		face_area += face->face_rect_w * face->face_rect_h;
 		dcm_debug("[#%d] face rect: XYWH (%d, %d, %d, %d)", i, face->face_rect_x, face->face_rect_y, face->face_rect_w,
@@ -175,10 +175,8 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 		}
 
 		/* Send db updated notification */
-		if (face != NULL) {
-			DcmFaceApi::freeDcmFaceItem(face);
-			face = NULL;
-		}
+		DcmFaceApi::freeDcmFaceItem(face);
+		face = NULL;
 	}
 
 DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED:
@@ -188,9 +186,8 @@ DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED:
 		dcm_error("Failed to insert face item into face_scan_list! err: %d", err);
 	}
 
-	if (face_info != NULL) {
+	if (face_info.count > 0) {
 		dcm_face_destroy_face_info(face_info);
-		face_info = NULL;
 	}
 
 	if (face != NULL) {

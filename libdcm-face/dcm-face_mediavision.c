@@ -64,20 +64,28 @@ static face_error_e __convert_to_mv_error_e(mv_error_e err)
 
 static int __convert_to_mv_colorspace_e(face_image_colorspace_e src, mv_colorspace_e *dst)
 {
+	int ret = FACE_ERROR_NONE;
+
 	switch (src) {
 	case FACE_IMAGE_COLORSPACE_YUV420:
 		*dst = MEDIA_VISION_COLORSPACE_I420;
-		return FACE_ERROR_NONE;
+		break;
 	case FACE_IMAGE_COLORSPACE_RGB888:
 		*dst = MEDIA_VISION_COLORSPACE_RGB888;
-		return FACE_ERROR_NONE;
+		break;
+	case FACE_IMAGE_COLORSPACE_RGBA:
+		*dst = MEDIA_VISION_COLORSPACE_RGBA;
+		break;
 	default:
 		*dst = MEDIA_VISION_COLORSPACE_INVALID;
 		dcm_error("Unknown colorspace : %d", src);
+		ret = FACE_ERROR_INVALID_PARAMTER;
 		break;
 	}
 
-	return FACE_ERROR_INVALID_PARAMTER;
+	dcm_debug("dcm colorspace: %d, mv colorspace: %d", src, *dst);
+
+	return ret;
 }
 
 void __face_detected_cb(mv_source_h source, mv_engine_config_h cfg, mv_rectangle_s *faces_locations, int number_of_faces, void *user_data)
@@ -125,7 +133,7 @@ int _face_handle_create(__inout void **handle)
 
 	dcm_debug_fenter();
 
-	dcm_retvm_if(handle == NULL, FACE_ERROR_OUT_OF_MEMORY, "handle create fail");
+	dcm_retvm_if(_handle == NULL, FACE_ERROR_OUT_OF_MEMORY, "handle create fail");
 
 	err = mv_create_engine_config(&(_handle->cfg));
 	if (err != MEDIA_VISION_ERROR_NONE) {

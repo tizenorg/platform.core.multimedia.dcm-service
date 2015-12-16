@@ -1,6 +1,6 @@
 Name:       dcm-service
 Summary:    Multimedia DCM(Digital Contents Management) Service
-Version:    0.0.1
+Version:    0.0.2
 Release:    0
 Group:      Multimedia/Service
 License:    Apache-2.0
@@ -14,9 +14,7 @@ BuildRequires:  cmake
 BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(gthread-2.0)
 BuildRequires:  pkgconfig(dlog)
-BuildRequires:  pkgconfig(ecore-evas)
-BuildRequires:  pkgconfig(evas)
-BuildRequires:  pkgconfig(libexif)
+#BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(sqlite3)
 BuildRequires:  pkgconfig(capi-media-image-util)
 BuildRequires:  pkgconfig(capi-media-vision)

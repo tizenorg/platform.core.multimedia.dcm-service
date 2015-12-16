@@ -15,18 +15,44 @@
  *
  */
 
-#include <Evas.h>
-#include <Ecore_Evas.h>
 #include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <image_util.h>
-#include <libexif/exif-data.h>
 #include <mm_util_imgp.h>
 #include <dcm_image_debug_utils.h>
 #include <dcm_image_codec.h>
 #include <DcmTypes.h>
 
+#define MIME_TYPE_JPEG "image/jpeg"
+#define MIME_TYPE_PNG "image/png"
+#define MIME_TYPE_BMP "image/bmp"
+
+#define OPT_IMAGE_WIDTH		2048
+#define OPT_IMAGE_HEIGHT	1536
+
+void __dcm_decode_calc_image_size(unsigned int src_width, unsigned int src_height, unsigned int *calc_width, unsigned int *calc_height)
+{
+	*calc_width = 0;
+	*calc_height = 0;
+
+	if (src_width <= OPT_IMAGE_WIDTH && src_height <= OPT_IMAGE_HEIGHT) {
+		dcm_debug("Original image is smaller than target image");
+		*calc_width = src_width;
+		*calc_height = src_height;
+		return;
+	}
+
+	if (src_width > src_height) {
+		*calc_width = OPT_IMAGE_WIDTH;
+		*calc_height = (int)(src_height * (((double) OPT_IMAGE_WIDTH) / ((double) src_width)));
+	} else {
+		*calc_width = (int)(src_width * (((double) OPT_IMAGE_HEIGHT) / ((double) src_height)));
+		*calc_height = OPT_IMAGE_HEIGHT;
+	}
+}
+
+#if 0
 int __dcm_decode_image_with_evas(const char *origin_path,
 					int dest_width, int dest_height,
 					dcm_image_info *image_info)
@@ -167,22 +193,22 @@ static int __dcm_codec_get_image_orientation(const char *path, int *orientation)
 	switch (status) {
 		case 1:
 		case 2:
-			*orientation = 0;
+			*orientation = DEGREE_0;
 			break;
 		case 3:
 		case 4:
-			*orientation = 180;
+			*orientation = DEGREE_180;
 			break;
 		case 5:
 		case 8:
-			*orientation = 270;
+			*orientation = DEGREE_270;
 			break;
 		case 6:
 		case 7:
-			*orientation = 90;
+			*orientation = DEGREE_90;
 			break;
 		default:
-			*orientation = 0;
+			*orientation = DEGREE_0;
 			break;
 	}
 
@@ -197,11 +223,12 @@ DCM_SVC_DB_GET_FACE_ORIENTATION_FAILED:
 
 	return ret;
 }
+#endif
 
-static int __dcm_codec_rotate_by_orientation(const unsigned char *source, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, dcm_image_codec_type_e decode_type, int *orientation)
+static int _dcm_rotate_image(const unsigned char *source, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, dcm_image_codec_type_e decode_type, int orientation)
 {
 	int ret = IMAGE_UTIL_ERROR_NONE;
-	image_util_colorspace_e colorspace = IMAGE_UTIL_COLORSPACE_I420;
+	image_util_colorspace_e colorspace = IMAGE_UTIL_COLORSPACE_RGBA8888;
 	image_util_rotation_e rotate = IMAGE_UTIL_ROTATION_NONE;
 	unsigned char *rotated_buffer = NULL;
 	unsigned int rotated_buffer_size = 0;
@@ -211,20 +238,26 @@ static int __dcm_codec_rotate_by_orientation(const unsigned char *source, unsign
 
 	if (decode_type == DCM_IMAGE_CODEC_I420) {
 		colorspace = IMAGE_UTIL_COLORSPACE_I420;
-	} else if (decode_type == DCM_IMAGE_CODEC_RGB888) {
+	} else if (decode_type == DCM_IMAGE_CODEC_RGB) {
 		colorspace = IMAGE_UTIL_COLORSPACE_RGB888;
+	} else if (decode_type == DCM_IMAGE_CODEC_RGBA) {
+		colorspace = IMAGE_UTIL_COLORSPACE_RGBA8888;
+	} else {
+		return DCM_ERROR_UNSUPPORTED_IMAGE_TYPE;
 	}
 
 	/* Get rotate angle enum */
-	if (*orientation == 180) { // 3-180
+	if (orientation == DEGREE_180) { // 3-180
 		rotate = IMAGE_UTIL_ROTATION_180;
-	} else if (*orientation == 90) { // 6-90
+	} else if (orientation == DEGREE_90) { // 6-90
 		rotate = IMAGE_UTIL_ROTATION_90;
-	} else if (*orientation == 270) { // 8-270
+	} else if (orientation == DEGREE_270) { // 8-270
 		rotate = IMAGE_UTIL_ROTATION_270;
 	} else {
 		rotate = IMAGE_UTIL_ROTATION_NONE;
 	}
+
+	dcm_debug("orientation: %d, rotate: %d", orientation, rotate);
 
 	if (rotate == IMAGE_UTIL_ROTATION_90 || rotate == IMAGE_UTIL_ROTATION_270) {
 		rotated_width = *buff_height;
@@ -282,6 +315,110 @@ static int __dcm_codec_rotate_by_orientation(const unsigned char *source, unsign
 	return DCM_SUCCESS;
 }
 
+int dcm_decode_image(const char *file_path,
+	dcm_image_codec_type_e decode_type, const char* mimne_type, bool resize,
+	unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height,
+	int orientation, unsigned int *size)
+{
+	int ret = IMAGE_UTIL_ERROR_NONE;
+	image_util_colorspace_e colorspace = IMAGE_UTIL_COLORSPACE_RGBA8888;
+	unsigned char *decode_buffer = NULL;
+	unsigned int decode_width = 0, decode_height = 0;
+	unsigned char *resize_buffer = NULL;
+	unsigned int resize_buffer_size = 0;
+	image_util_decode_h handle = NULL;
+
+	dcm_debug_fenter();
+
+	DCM_CHECK_VAL(file_path, DCM_ERROR_INVALID_PARAMETER);
+
+	ret = image_util_decode_create(&handle);
+	if (ret != IMAGE_UTIL_ERROR_NONE) {
+		dcm_error("Error image_util_decode_create ret : %d", ret);
+		return DCM_ERROR_IMAGE_UTIL_FAILED;
+	}	
+
+	if (strcmp(mimne_type, MIME_TYPE_PNG) == 0) {
+		DCM_CHECK_VAL((decode_type != DCM_IMAGE_CODEC_RGBA), DCM_ERROR_UNSUPPORTED_IMAGE_TYPE);
+	} else if (strcmp(mimne_type, MIME_TYPE_BMP) == 0) {
+		DCM_CHECK_VAL((decode_type != DCM_IMAGE_CODEC_RGBA), DCM_ERROR_UNSUPPORTED_IMAGE_TYPE);
+	} else if (strcmp(mimne_type, MIME_TYPE_JPEG) == 0) {
+		if (decode_type == DCM_IMAGE_CODEC_I420) {
+			colorspace = IMAGE_UTIL_COLORSPACE_I420;
+		} else if (decode_type == DCM_IMAGE_CODEC_RGB) {
+			colorspace = IMAGE_UTIL_COLORSPACE_RGB888;
+		} else if (decode_type == DCM_IMAGE_CODEC_RGBA) {
+			colorspace = IMAGE_UTIL_COLORSPACE_RGBA8888;
+		} else {
+			return DCM_ERROR_UNSUPPORTED_IMAGE_TYPE;
+		}
+		ret = image_util_decode_set_colorspace(handle, colorspace);
+	} else {
+		dcm_error("Failed not supported mime type! (%s)", mimne_type);
+		return DCM_ERROR_INVALID_PARAMETER;
+	}
+
+	ret = image_util_decode_set_input_path(handle, file_path);
+	if (ret != IMAGE_UTIL_ERROR_NONE) {
+		dcm_error("Error image_util_decode_set_input_path ret : %d", ret);
+		return DCM_ERROR_IMAGE_UTIL_FAILED;
+	}
+
+	ret = image_util_decode_set_output_buffer(handle, &decode_buffer);
+	if (ret != IMAGE_UTIL_ERROR_NONE) {
+		dcm_error("Error image_util_decode_set_output_buffer ret : %d", ret);
+		return DCM_ERROR_IMAGE_UTIL_FAILED;
+	}
+
+	ret = image_util_decode_run(handle, (unsigned long *)&decode_width, (unsigned long *)&decode_height, (unsigned long long *)size);
+	if (ret != IMAGE_UTIL_ERROR_NONE) {
+		dcm_error("Error image_util_decode_run ret : %d", ret);
+		return DCM_ERROR_IMAGE_UTIL_FAILED;
+	}
+
+	ret = image_util_decode_destroy(handle);
+	if (ret != IMAGE_UTIL_ERROR_NONE) {
+		dcm_error("Error image_util_decode_destroy ret : %d", ret);
+		return DCM_ERROR_IMAGE_UTIL_FAILED;
+	}
+
+
+	/* Resize the decoded buffer to enhance performance with big size image */
+	if (resize) {
+		__dcm_decode_calc_image_size(decode_width, decode_height, buff_width, buff_height);
+	} else {
+		*buff_width = decode_width;
+		*buff_height = decode_height;
+	}
+	if ((decode_width != *buff_width) || (decode_height != *buff_height)) {
+		ret = image_util_calculate_buffer_size(*buff_width, *buff_height, colorspace, &resize_buffer_size);
+		if (ret != DCM_SUCCESS) {
+			dcm_error("Failed to calculate image buffer size! err: %d", ret);
+			return DCM_ERROR_CODEC_DECODE_FAILED;
+		}
+		resize_buffer = (unsigned char *)malloc(sizeof(unsigned char) * (resize_buffer_size));
+		mm_util_resize_image(decode_buffer, decode_width, decode_height, MM_UTIL_IMG_FMT_RGBA8888, resize_buffer, buff_width, buff_height);
+	} else {
+		resize_buffer = decode_buffer;
+	}
+
+	/* Rotate the resized buffer according to orientation */
+	if (orientation == 0) {
+		*image_buffer = resize_buffer;
+	} else {
+		ret = _dcm_rotate_image(resize_buffer, image_buffer, buff_width, buff_height, decode_type, orientation);
+		if (ret != DCM_SUCCESS) {
+			dcm_error("Failed to rotate image buffer! err: %d", ret);
+			return DCM_ERROR_CODEC_DECODE_FAILED;
+		}
+	}
+
+	dcm_debug_fleave();
+
+	return DCM_SUCCESS;
+}
+
+#if 0
 static int __dcm_decode_image_with_size_orient(const char *file_path, unsigned int target_width, unsigned int target_height,
 	dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size)
 {
@@ -295,8 +432,12 @@ static int __dcm_decode_image_with_size_orient(const char *file_path, unsigned i
 
 	if (decode_type == DCM_IMAGE_CODEC_I420) {
 		colorspace = IMAGE_UTIL_COLORSPACE_I420;
-	} else if (decode_type == DCM_IMAGE_CODEC_RGB888) {
+	} else if (decode_type == DCM_IMAGE_CODEC_RGB) {
 		colorspace = IMAGE_UTIL_COLORSPACE_RGB888;
+	} else if (decode_type == DCM_IMAGE_CODEC_RGBA) {
+		colorspace = IMAGE_UTIL_COLORSPACE_RGBA8888;
+	} else {
+		return DCM_ERROR_UNSUPPORTED_IMAGE_TYPE;
 	}
 
 	/* Extract orientation from exif */
@@ -318,7 +459,7 @@ static int __dcm_decode_image_with_size_orient(const char *file_path, unsigned i
 	if (*orientation == 0) {
 		*image_buffer = decode_buffer;
 	} else {
-		ret = __dcm_codec_rotate_by_orientation(decode_buffer, image_buffer, buff_width, buff_height, decode_type, orientation);
+		ret = _dcm_rotate_image(decode_buffer, image_buffer, buff_width, buff_height, decode_type, *orientation);
 		if (ret != DCM_SUCCESS) {
 			dcm_error("Failed to rotate image buffer! err: %d", ret);
 			return DCM_ERROR_CODEC_DECODE_FAILED;
@@ -330,7 +471,6 @@ static int __dcm_decode_image_with_size_orient(const char *file_path, unsigned i
 	return DCM_SUCCESS;
 }
 
-EXPORT_API
 int dcm_decode_image_with_size_orient(const char *file_path, unsigned int target_width, unsigned int target_height,
 	dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size)
 {
@@ -344,7 +484,6 @@ int dcm_decode_image_with_size_orient(const char *file_path, unsigned int target
 	return ret;
 }
 
-EXPORT_API
 int dcm_decode_image_with_evas(const char *file_path, unsigned int target_width, unsigned int target_height,
 	dcm_image_codec_type_e decode_type, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, int *orientation, unsigned int *size)
 {
@@ -360,7 +499,7 @@ int dcm_decode_image_with_evas(const char *file_path, unsigned int target_width,
 	if (decode_type == DCM_IMAGE_CODEC_I420) {
 		colorspace = IMAGE_UTIL_COLORSPACE_I420;
 		mm_colorspace = MM_UTIL_IMG_FMT_I420;
-	} else if (decode_type == DCM_IMAGE_CODEC_RGB888) {
+	} else if (decode_type == DCM_IMAGE_CODEC_RGB) {
 		colorspace = IMAGE_UTIL_COLORSPACE_RGB888;
 		mm_colorspace = MM_UTIL_IMG_FMT_RGB888;
 	}
@@ -403,3 +542,4 @@ int dcm_decode_image_with_evas(const char *file_path, unsigned int target_width,
 
 	return ret;
 }
+#endif

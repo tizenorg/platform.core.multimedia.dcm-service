@@ -41,8 +41,8 @@ MESSAGE("Build type: ${CMAKE_BUILD_TYPE}")
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/libdcm-util/include ${CMAKE_SOURCE_DIR}/libdcm-face/include)
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED glib-2.0 gthread-2.0 dlog ecore-evas evas sqlite3 capi-media-image-util capi-media-vision libexif media-thumbnail libmedia-utils 
-mmutil-imgp uuid vconf libtzplatform-config)
+pkg_check_modules(pkgs REQUIRED glib-2.0 gthread-2.0 dlog sqlite3 capi-media-image-util capi-media-vision 
+media-thumbnail libmedia-utils mmutil-imgp uuid vconf libtzplatform-config)
 
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
