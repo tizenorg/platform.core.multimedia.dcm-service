@@ -2,7 +2,7 @@ SET(fw_name "dcm-service")
 SET(DCM_SERVER "dcm-svc")
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(${DCM_SERVER} REQUIRED dlog glib-2.0 gthread-2.0 libmedia-utils libexif libtzplatform-config sqlite3)
+pkg_check_modules(${DCM_SERVER} REQUIRED dlog glib-2.0 gthread-2.0 libmedia-utils libtzplatform-config sqlite3)
 
 FOREACH(flag ${${DCM_SERVER}_CFLAGS})
     SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
