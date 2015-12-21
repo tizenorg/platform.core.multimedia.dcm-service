@@ -482,7 +482,7 @@ int DcmDbUtils::_dcm_svc_db_update_color_to_db(DcmColorItem color)
 	char* query_string = NULL;
 
 	dcm_debug_fenter();
-
+#if 0
 	DCM_CHECK_VAL(db_handle, DCM_ERROR_INVALID_PARAMETER);
 	DCM_CHECK_VAL(color.media_uuid, DCM_ERROR_INVALID_PARAMETER);
 	DCM_CHECK_VAL(color.storage_uuid, DCM_ERROR_INVALID_PARAMETER);
@@ -499,7 +499,7 @@ int DcmDbUtils::_dcm_svc_db_update_color_to_db(DcmColorItem color)
 	g_mutex_unlock(&gMutexLock);
 
 	DCM_SQLITE3_FREE(query_string);
-
+#endif
 	dcm_debug_fleave();
 
 	return ret;

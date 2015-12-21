@@ -72,17 +72,7 @@ EXPORT_API int dcm_face_destroy(__in dcm_face_h handle)
 	return ret;
 }
 
-EXPORT_API int dcm_face_get_prefered_colorspace(__in dcm_face_h handle, __out face_image_colorspace_e *colorspace)
-{
-	dcm_retvm_if(handle == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid handle");
-	dcm_retvm_if(colorspace == NULL, FACE_ERROR_INVALID_PARAMTER, "Invalid colorspace");
-
-	*colorspace = FACE_IMAGE_COLORSPACE_RGB888;
-
-	return FACE_ERROR_NONE;
-}
-
-EXPORT_API int dcm_face_set_image_info(dcm_face_h handle, face_image_colorspace_e colorspace, unsigned char *buffer, unsigned int width, unsigned int height, unsigned int size)
+EXPORT_API int dcm_face_set_image_info(dcm_face_h handle, face_image_colorspace_e colorspace, unsigned char *buffer, unsigned int width, unsigned int height, unsigned long long size)
 {
 	FaceHandleT *_handle = (FaceHandleT *)handle;
 	unsigned char *data = NULL;
@@ -97,6 +87,10 @@ EXPORT_API int dcm_face_set_image_info(dcm_face_h handle, face_image_colorspace_
 	case FACE_IMAGE_COLORSPACE_RGB888:
 	case FACE_IMAGE_COLORSPACE_RGBA:
 		data = (unsigned char *)calloc(1, size);
+		if (data == NULL) {
+			dcm_error("Not allocate memory");
+			return FACE_ERROR_OUT_OF_MEMORY;
+		}
 		memcpy(data, buffer, size);
 		break;
 	default:

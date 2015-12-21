@@ -260,7 +260,7 @@ int DcmScanSvc::runScanProcess(DcmScanItem *scan_item)
 
 	DcmImageInfo image_info = {0, };
 	memset(&image_info, 0, sizeof(DcmImageInfo));
-	dcm_image_codec_type_e image_format = DCM_IMAGE_CODEC_RGBA;
+	dcm_image_format_e image_format = DCM_IMAGE_FORMAT_I420;
 
 	/* Process scan operation if the file exists */
 	if (g_file_test(scan_item->file_path, (GFileTest)(G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR)) == TRUE) {
@@ -304,31 +304,34 @@ int DcmScanSvc::runScanProcess(DcmScanItem *scan_item)
 			dcm_debug("ImgGetImageInfo type: %d, width: %d, height: %d", type, image_info.original_width, image_info.original_height);
 		}
 
-		if ((strcmp(scan_item->mime_type, MIME_TYPE_JPEG) == 0) ||
-			(strcmp(scan_item->mime_type, MIME_TYPE_PNG) == 0) ||
-			(strcmp(scan_item->mime_type, MIME_TYPE_BMP) == 0)) {
-			ret = dcm_decode_image((const char *) (scan_item->file_path),
-				image_format, scan_item->mime_type, FALSE, &(image_info.pixel),
-				&(image_info.buffer_width), &(image_info.buffer_height), image_info.orientation, &(image_info.size));
-			if (ret != DCM_SUCCESS) {
-				dcm_error("Failed dcm_decode_image! err: %d", ret);
-				return ret;
-			}
+		if (strcmp(scan_item->mime_type, MIME_TYPE_JPEG) == 0) {
+			image_format = DCM_IMAGE_FORMAT_RGB;
+		} else if (strcmp(scan_item->mime_type, MIME_TYPE_PNG) == 0) {
+			image_format = DCM_IMAGE_FORMAT_RGBA;
+		} else if (strcmp(scan_item->mime_type, MIME_TYPE_BMP) == 0) {
+			image_format = DCM_IMAGE_FORMAT_RGBA;
 		} else {
 			dcm_error("Failed not supported type! (%s)", scan_item->mime_type);
 			return DCM_ERROR_INVALID_PARAMETER;
 		}
 
+		ret = dcm_decode_image((const char *) (scan_item->file_path), image_format, scan_item->mime_type,
+			image_info.orientation, FALSE, &(image_info.pixel), &(image_info.size),
+			&(image_info.buffer_width), &(image_info.buffer_height));
+		if (ret != DCM_SUCCESS) {
+			dcm_error("Failed dcm_decode_image! err: %d", ret);
+			return ret;
+		}
+
 		image_info.decode_type = (DcmImageDecodeType)image_format;
 
-		dcm_debug("Image info width: %d, height: %d, buf_width: %d, buf_height: %d, orientation: %d",
-			image_info.original_width, image_info.original_height, image_info.buffer_width, image_info.buffer_height, image_info.orientation);
+		dcm_debug("Image info width: %d, height: %d, buf_width: %d, buf_height: %d",
+			image_info.original_width, image_info.original_height, image_info.buffer_width, image_info.buffer_height);
 
 		/* Process face scan */
 		ret = DcmFaceUtils::runFaceRecognizeProcess(scan_item, &image_info);
-		if (ret != DCM_SUCCESS) {
+		if (ret != DCM_SUCCESS)
 			dcm_error("Failed to process face detection! err: %d", ret);
-		}
 
 #if 0
 		/* Process color extract */

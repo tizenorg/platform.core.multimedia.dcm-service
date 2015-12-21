@@ -96,19 +96,9 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 	DCM_CHECK_VAL(image_info, DCM_ERROR_INVALID_PARAMETER);
 	DCM_CHECK_VAL(image_info->pixel, DCM_ERROR_INVALID_PARAMETER);
 
-	/* Create image buffer used for face detection */
-	face_image_colorspace_e prefered_colorspace = FACE_IMAGE_COLORSPACE_RGB888;
+	dcm_debug("colorspce: [%d], w: [%d], h: [%d]", image_info->decode_type, image_info->buffer_width, image_info->buffer_height);
 
-	err = dcm_face_get_prefered_colorspace(dcm_face_handle, &prefered_colorspace);
-	if (err != FACE_ERROR_NONE) {
-		dcm_error("Failed to create face_image! err: %d", err);
-		ret = DCM_ERROR_FACE_ENGINE_FAILED;
-		goto DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED;
-	}
-
-	dcm_debug("colorspce: [%d], w: [%d], h: [%d]", prefered_colorspace, image_info->buffer_width, image_info->buffer_height);
-
-	err = dcm_face_set_image_info(dcm_face_handle, prefered_colorspace, image_info->pixel, image_info->buffer_width, image_info->buffer_height, image_info->size);
+	err = dcm_face_set_image_info(dcm_face_handle, (face_image_colorspace_e)image_info->decode_type, image_info->pixel, image_info->buffer_width, image_info->buffer_height, image_info->size);
 	if (err != FACE_ERROR_NONE) {
 		dcm_error("Failed to dcm_face_set_image_info! err: %d", err);
 		ret = DCM_ERROR_FACE_ENGINE_FAILED;

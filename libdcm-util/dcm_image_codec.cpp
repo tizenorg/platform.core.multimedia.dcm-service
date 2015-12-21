@@ -28,8 +28,8 @@
 #define MIME_TYPE_PNG "image/png"
 #define MIME_TYPE_BMP "image/bmp"
 
-#define OPT_IMAGE_WIDTH		2048
-#define OPT_IMAGE_HEIGHT	1536
+#define OPT_IMAGE_WIDTH		1280
+#define OPT_IMAGE_HEIGHT	720
 
 static void _dcm_get_optimized_wh(unsigned int src_width, unsigned int src_height, unsigned int *calc_width, unsigned int *calc_height)
 {
@@ -52,7 +52,7 @@ static void _dcm_get_optimized_wh(unsigned int src_width, unsigned int src_heigh
 	}
 }
 
-static int _dcm_rotate_image(const unsigned char *source, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height, dcm_image_codec_type_e decode_type, int orientation)
+static int _dcm_rotate_image(const unsigned char *source, const dcm_image_format_e format, const int orientation, unsigned char **image_buffer, unsigned long long *size, unsigned int *buff_width, unsigned int *buff_height)
 {
 	int ret = IMAGE_UTIL_ERROR_NONE;
 	image_util_colorspace_e colorspace = IMAGE_UTIL_COLORSPACE_RGBA8888;
@@ -63,22 +63,22 @@ static int _dcm_rotate_image(const unsigned char *source, unsigned char **image_
 
 	DCM_CHECK_VAL(source, DCM_ERROR_INVALID_PARAMETER);
 
-	if (decode_type == DCM_IMAGE_CODEC_I420) {
+	if (format == DCM_IMAGE_FORMAT_I420) {
 		colorspace = IMAGE_UTIL_COLORSPACE_I420;
-	} else if (decode_type == DCM_IMAGE_CODEC_RGB) {
+	} else if (format == DCM_IMAGE_FORMAT_RGB) {
 		colorspace = IMAGE_UTIL_COLORSPACE_RGB888;
-	} else if (decode_type == DCM_IMAGE_CODEC_RGBA) {
+	} else if (format == DCM_IMAGE_FORMAT_RGBA) {
 		colorspace = IMAGE_UTIL_COLORSPACE_RGBA8888;
 	} else {
 		return DCM_ERROR_UNSUPPORTED_IMAGE_TYPE;
 	}
 
 	/* Get rotate angle enum */
-	if (orientation == DEGREE_180) { // 3-180
+	if (orientation == DEGREE_180) {
 		rotate = IMAGE_UTIL_ROTATION_180;
-	} else if (orientation == DEGREE_90) { // 6-90
+	} else if (orientation == DEGREE_90) {
 		rotate = IMAGE_UTIL_ROTATION_90;
-	} else if (orientation == DEGREE_270) { // 8-270
+	} else if (orientation == DEGREE_270) {
 		rotate = IMAGE_UTIL_ROTATION_270;
 	} else {
 		rotate = IMAGE_UTIL_ROTATION_NONE;
@@ -114,8 +114,10 @@ static int _dcm_rotate_image(const unsigned char *source, unsigned char **image_
 		return DCM_ERROR_IMAGE_UTIL_FAILED;
 	}
 
+	*size = rotated_buffer_size;
+
 	try {
-		/* Rotate input bitmap */
+		/* Rotate input buffer */
 		ret = image_util_rotate(rotated_buffer, &rotated_width, &rotated_height, rotate, source,
 		*buff_width, *buff_height, colorspace);
 
@@ -129,7 +131,7 @@ static int _dcm_rotate_image(const unsigned char *source, unsigned char **image_
 		*buff_width = rotated_width;
 		*buff_height = rotated_height;
 
-		/* Allocated pixel should be freed when scanning is finished for this rotated bitmap */
+		/* Allocated data should be freed when scanning is finished for this rotated image */
 		*image_buffer = rotated_buffer;
 		dcm_warn("rotated decode buffer: %p", *image_buffer);
 
@@ -142,17 +144,18 @@ static int _dcm_rotate_image(const unsigned char *source, unsigned char **image_
 	return DCM_SUCCESS;
 }
 
-int dcm_decode_image(const char *file_path,
-	dcm_image_codec_type_e decode_type, const char* mimne_type, bool resize,
-	unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height,
-	int orientation, unsigned int *size)
+int dcm_decode_image(const char *file_path, const dcm_image_format_e format,
+	const char* mimne_type, const int orientation, const bool resize,
+	unsigned char **image_buffer, unsigned long long *size,
+	unsigned int *buff_width, unsigned int *buff_height)
 {
 	int ret = IMAGE_UTIL_ERROR_NONE;
 	image_util_colorspace_e colorspace = IMAGE_UTIL_COLORSPACE_RGBA8888;
+	mm_util_img_format mm_format = MM_UTIL_IMG_FMT_RGBA8888;
 	unsigned char *decode_buffer = NULL;
 	unsigned int decode_width = 0, decode_height = 0;
 	unsigned char *resize_buffer = NULL;
-	unsigned int resize_buffer_size = 0;
+	unsigned int buffer_size = 0;
 	image_util_decode_h handle = NULL;
 
 	dcm_debug_fenter();
@@ -165,30 +168,30 @@ int dcm_decode_image(const char *file_path,
 		return DCM_ERROR_IMAGE_UTIL_FAILED;
 	}
 
-	if (strcmp(mimne_type, MIME_TYPE_PNG) == 0) {
-		DCM_CHECK_VAL((decode_type != DCM_IMAGE_CODEC_RGBA), DCM_ERROR_UNSUPPORTED_IMAGE_TYPE);
-	} else if (strcmp(mimne_type, MIME_TYPE_BMP) == 0) {
-		DCM_CHECK_VAL((decode_type != DCM_IMAGE_CODEC_RGBA), DCM_ERROR_UNSUPPORTED_IMAGE_TYPE);
-	} else if (strcmp(mimne_type, MIME_TYPE_JPEG) == 0) {
-		if (decode_type == DCM_IMAGE_CODEC_I420) {
-			colorspace = IMAGE_UTIL_COLORSPACE_I420;
-		} else if (decode_type == DCM_IMAGE_CODEC_RGB) {
-			colorspace = IMAGE_UTIL_COLORSPACE_RGB888;
-		} else if (decode_type == DCM_IMAGE_CODEC_RGBA) {
-			colorspace = IMAGE_UTIL_COLORSPACE_RGBA8888;
-		} else {
-			return DCM_ERROR_UNSUPPORTED_IMAGE_TYPE;
-		}
-		ret = image_util_decode_set_colorspace(handle, colorspace);
-	} else {
-		dcm_error("Failed not supported mime type! (%s)", mimne_type);
-		return DCM_ERROR_INVALID_PARAMETER;
-	}
-
 	ret = image_util_decode_set_input_path(handle, file_path);
 	if (ret != IMAGE_UTIL_ERROR_NONE) {
 		dcm_error("Error image_util_decode_set_input_path ret : %d", ret);
 		return DCM_ERROR_IMAGE_UTIL_FAILED;
+	}
+
+	if (strcmp(mimne_type, MIME_TYPE_JPEG) == 0) {
+		if (format == DCM_IMAGE_FORMAT_I420) {
+			colorspace = IMAGE_UTIL_COLORSPACE_I420;
+			mm_format = MM_UTIL_IMG_FMT_I420;
+		} else if (format == DCM_IMAGE_FORMAT_RGB) {
+			colorspace = IMAGE_UTIL_COLORSPACE_RGB888;
+			mm_format = MM_UTIL_IMG_FMT_RGB888;
+		} else if (format == DCM_IMAGE_FORMAT_RGBA) {
+			colorspace = IMAGE_UTIL_COLORSPACE_RGBA8888;
+			mm_format = MM_UTIL_IMG_FMT_RGBA8888;
+		} else {
+			return DCM_ERROR_UNSUPPORTED_IMAGE_TYPE;
+		}
+		ret = image_util_decode_set_colorspace(handle, colorspace);
+		if (ret != IMAGE_UTIL_ERROR_NONE) {
+			dcm_error("Error image_util_decode_set_colorspace ret : %d", ret);
+			return DCM_ERROR_IMAGE_UTIL_FAILED;
+		}
 	}
 
 	ret = image_util_decode_set_output_buffer(handle, &decode_buffer);
@@ -197,7 +200,7 @@ int dcm_decode_image(const char *file_path,
 		return DCM_ERROR_IMAGE_UTIL_FAILED;
 	}
 
-	ret = image_util_decode_run(handle, (unsigned long *)&decode_width, (unsigned long *)&decode_height, (unsigned long long *)size);
+	ret = image_util_decode_run(handle, (unsigned long *)&decode_width, (unsigned long *)&decode_height, size);
 	if (ret != IMAGE_UTIL_ERROR_NONE) {
 		dcm_error("Error image_util_decode_run ret : %d", ret);
 		return DCM_ERROR_IMAGE_UTIL_FAILED;
@@ -220,13 +223,16 @@ int dcm_decode_image(const char *file_path,
 
 	/* Resize the big size image to enhance performance for big size image */
 	if ((decode_width != *buff_width) || (decode_height != *buff_height)) {
-		ret = image_util_calculate_buffer_size(*buff_width, *buff_height, colorspace, &resize_buffer_size);
+		ret = image_util_calculate_buffer_size(*buff_width, *buff_height, colorspace, &buffer_size);
 		if (ret != DCM_SUCCESS) {
 			dcm_error("Failed to calculate image buffer size! err: %d", ret);
 			return DCM_ERROR_CODEC_DECODE_FAILED;
 		}
-		resize_buffer = (unsigned char *)malloc(sizeof(unsigned char) * (resize_buffer_size));
-		mm_util_resize_image(decode_buffer, decode_width, decode_height, MM_UTIL_IMG_FMT_RGBA8888, resize_buffer, buff_width, buff_height);
+		*size = buffer_size;
+		resize_buffer = (unsigned char *)malloc(sizeof(unsigned char) * (buffer_size));
+		if (resize_buffer != NULL) {
+			mm_util_resize_image(decode_buffer, decode_width, decode_height, mm_format, resize_buffer, buff_width, buff_height);
+		}
 	} else {
 		resize_buffer = decode_buffer;
 	}
@@ -235,7 +241,7 @@ int dcm_decode_image(const char *file_path,
 	if (orientation == 0) {
 		*image_buffer = resize_buffer;
 	} else {
-		ret = _dcm_rotate_image(resize_buffer, image_buffer, buff_width, buff_height, decode_type, orientation);
+		ret = _dcm_rotate_image(resize_buffer, format, orientation, image_buffer, size, buff_width, buff_height);
 		if (ret != DCM_SUCCESS) {
 			dcm_error("Failed to rotate image buffer! err: %d", ret);
 			return DCM_ERROR_CODEC_DECODE_FAILED;
