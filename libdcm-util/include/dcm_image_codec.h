@@ -28,10 +28,10 @@ extern "C" {
 #endif
 
 typedef enum {
-	DCM_IMAGE_CODEC_I420,
-	DCM_IMAGE_CODEC_RGB,
-	DCM_IMAGE_CODEC_RGBA,
-} dcm_image_codec_type_e;
+	DCM_IMAGE_FORMAT_I420,
+	DCM_IMAGE_FORMAT_RGB,
+	DCM_IMAGE_FORMAT_RGBA,
+} dcm_image_format_e;
 
 typedef struct {
 	int size;
@@ -44,9 +44,10 @@ typedef struct {
 } dcm_image_info;
 
 
-int dcm_decode_image(const char *file_path,	dcm_image_codec_type_e decode_type, const char* mimne_type,
-	bool resize, unsigned char **image_buffer, unsigned int *buff_width, unsigned int *buff_height,
-	int orientation, unsigned int *size);
+int dcm_decode_image(const char *file_path, const dcm_image_format_e format,
+	const char* mimne_type, const int orientation, const bool resize,
+	unsigned char **image_buffer, unsigned long long *size,
+	unsigned int *buff_width, unsigned int *buff_height);
 
 #ifdef __cplusplus
 }

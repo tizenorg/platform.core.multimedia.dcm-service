@@ -196,7 +196,7 @@ int _face_detect_faces(__in dcm_face_h handle, __out face_rect_s *face_rect[], _
 
 	dcm_debug("face_detect image: %p, size: %d, width: %d, height: %d, color: %d", handle->image_info->data, handle->image_info->size, handle->image_info->width, handle->image_info->height, colorspace);
 
-	err = mv_source_fill_by_buffer(_fengine->source, handle->image_info->data, handle->image_info->size, handle->image_info->width, handle->image_info->height, colorspace);
+	err = mv_source_fill_by_buffer(_fengine->source, handle->image_info->data, (unsigned int)(handle->image_info->size), handle->image_info->width, handle->image_info->height, colorspace);
 	if (err != MEDIA_VISION_ERROR_NONE) {
 		dcm_error("Fail to mv_source_fill_by_buffer");
 		return __convert_to_mv_error_e(err);

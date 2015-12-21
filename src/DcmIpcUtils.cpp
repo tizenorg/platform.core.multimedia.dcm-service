@@ -33,7 +33,7 @@
 #include <DcmTypes.h>
 #include <DcmDebugUtils.h>
 
-static char DCM_IPC_PATH[5][100] =
+static char DCM_IPC_PATH[][100] =
 			{"/var/run/media-server/dcm_ipc_scanthread_recv",
  			 "/var/run/media-server/dcm_ipc_thumbserver_comm_recv",
  			 "/var/run/media-server/media_ipc_thumbdcm_dcmrecv"};
