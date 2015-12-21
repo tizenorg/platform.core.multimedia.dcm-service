@@ -80,7 +80,7 @@ int dcm_face_get_prefered_colorspace(dcm_face_h handle, face_image_colorspace_e 
  * @retval #FACE_ERROR_OUT_OF_MEMORY	Out of memory
  * @see dcm_face_create()
  */
-int dcm_face_set_image_info(dcm_face_h handle, face_image_colorspace_e colorspace, unsigned char *buffer, unsigned int width, unsigned int height, unsigned int size);
+int dcm_face_set_image_info(dcm_face_h handle, face_image_colorspace_e colorspace, unsigned char *buffer, unsigned int width, unsigned int height, unsigned long long size);
 
 /**
  * @brief Gets the face information of detected faces.

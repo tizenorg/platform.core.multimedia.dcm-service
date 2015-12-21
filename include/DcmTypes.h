@@ -129,12 +129,13 @@ typedef struct {
 
 typedef enum {
 	DCM_SVC_I420,
-	DCM_SVC_RGB888,
+	DCM_SVC_RGB,
+	DCM_SVC_RGBA,
 } DcmImageDecodeType;
 
 typedef struct {
 	unsigned char *pixel; 		/* decoding results, must be freed after use */
-	unsigned int size;
+	unsigned long long size;
 	int orientation;			/* orientation information extracted from exif */
 	unsigned int original_width;			/* original image width */
 	unsigned int original_height;		/* original image height */

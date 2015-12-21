@@ -38,7 +38,7 @@ typedef struct face_image_s {
 	unsigned char *data;
 	unsigned int width;
 	unsigned int height;
-	unsigned int size;
+	unsigned long long size;
 	face_image_colorspace_e colorspace;
 	unsigned int magic;
 } FaceImage;
