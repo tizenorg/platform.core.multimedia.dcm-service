@@ -97,7 +97,7 @@ int DcmIpcUtils::createSocket(int *socket_fd, DcmIpcPortType port)
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sun_family = AF_UNIX;
 	unlink(DCM_IPC_PATH[port]);
-	strcpy(serv_addr.sun_path, DCM_IPC_PATH[port]);
+	strncpy(serv_addr.sun_path, DCM_IPC_PATH[port], sizeof(serv_addr.sun_path) - 1);
 
 	/* Bind socket to local address */
 	for (i = 0; i < 20; i++) {
@@ -170,7 +170,7 @@ int DcmIpcUtils::sendSocketMsg(DcmIpcMsgType msg_type, uid_t uid, const char *ms
 	/* Set dcm thread socket address */
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sun_family = AF_UNIX;
-	strcpy(serv_addr.sun_path, DCM_IPC_PATH[port]);
+	strncpy(serv_addr.sun_path, DCM_IPC_PATH[port], sizeof(serv_addr.sun_path) - 1);
 
 	/* Connect to the socket */
 	if (connect(socket_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
