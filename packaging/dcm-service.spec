@@ -1,5 +1,5 @@
 Name:       dcm-service
-Summary:    Multimedia DCM(Digital Contents Management) Service
+Summary:    A media DCM(Digital Contents Management) Service
 Version:    0.0.4
 Release:    0
 Group:      Multimedia/Service
@@ -25,15 +25,15 @@ BuildRequires:  pkgconfig(vconf)
 BuildRequires:  pkgconfig(uuid)
 
 %description
-Description: Digital Contents Management(DCM) service process
+This package provides a media DCM(Digital Contents Management) service
 
 %package devel
-Summary:    Digital Contents Management service for multimedia applications. (development)
+Summary:    A media DCM(Digital Contents Management) service(Development)
 Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
 
 %description devel
-DCM service for multimedia applications. (development files)
+This package provides a media DCM(Digital Contents Management) service(Development files included)
 
 %prep
 %setup -q
@@ -49,10 +49,8 @@ make %{?jobs:-j%jobs}
 %install
 rm -rf %{buildroot}
 %make_install
-
-#License
 mkdir -p %{buildroot}/%{_datadir}/license
-cp LICENSE.APLv2.0 %{buildroot}/%{_datadir}/license/%{name}
+cp -rf %{_builddir}/%{name}-%{version}/LICENSE.APLv2.0 %{buildroot}/%{_datadir}/license/%{name}
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
@@ -62,11 +60,9 @@ cp LICENSE.APLv2.0 %{buildroot}/%{_datadir}/license/%{name}
 %defattr(-,root,root,-)
 %{_libdir}/*.so*
 %{_bindir}/dcm-svc
-#License
 %{_datadir}/license/%{name}
 
 %files devel
 %manifest %{name}.manifest
 %{_libdir}/*.so
 %{_libdir}/pkgconfig/%{name}.pc
-#%{_includedir}/media/*.h
