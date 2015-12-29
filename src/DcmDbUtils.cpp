@@ -478,11 +478,12 @@ int DcmDbUtils::_dcm_svc_db_insert_face_to_face_scan_list(DcmScanItem *scan_item
 int DcmDbUtils::_dcm_svc_db_update_color_to_db(DcmColorItem color)
 {
 	int ret = DCM_SUCCESS;
-	int err = MS_MEDIA_ERR_NONE;
-	char* query_string = NULL;
 
 	dcm_debug_fenter();
 #if 0
+	int err = MS_MEDIA_ERR_NONE;
+	char* query_string = NULL;
+
 	DCM_CHECK_VAL(db_handle, DCM_ERROR_INVALID_PARAMETER);
 	DCM_CHECK_VAL(color.media_uuid, DCM_ERROR_INVALID_PARAMETER);
 	DCM_CHECK_VAL(color.storage_uuid, DCM_ERROR_INVALID_PARAMETER);
