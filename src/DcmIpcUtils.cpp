@@ -158,7 +158,7 @@ int DcmIpcUtils::sendSocketMsg(DcmIpcMsgType msg_type, uid_t uid, const char *ms
 	/* If message size is larget than max_size, then message is invalid */
 	if (send_msg.msg_size >= DCM_IPC_MSG_MAX_SIZE) {
 		dcm_error("Message size is invalid!");
-		return DCM_ERROR_INVALID_IMAGE_SIZE;
+		return DCM_ERROR_NETWORK;
 	}
 
 	/* Create a new TCP socket */

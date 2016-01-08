@@ -93,6 +93,7 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 
 	DCM_CHECK_VAL(dcm_face_handle, DCM_ERROR_INVALID_PARAMETER);
 	DCM_CHECK_VAL(scan_item, DCM_ERROR_INVALID_PARAMETER);
+	DCM_CHECK_VAL(scan_item->media_uuid, DCM_ERROR_INVALID_PARAMETER);
 	DCM_CHECK_VAL(image_info, DCM_ERROR_INVALID_PARAMETER);
 	DCM_CHECK_VAL(image_info->pixel, DCM_ERROR_INVALID_PARAMETER);
 

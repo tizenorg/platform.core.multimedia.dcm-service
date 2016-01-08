@@ -38,10 +38,14 @@
 #define MIME_TYPE_PNG "image/png"
 #define MIME_TYPE_BMP "image/bmp"
 
+#define DCM_SVC_SCAN_THREAD_TIMEOUT_SEC 1
+
 class DcmScanSvc {
 public:
 	GMainLoop *g_scan_thread_mainloop;
 	GMainContext *scan_thread_main_context;
+	gboolean g_scan_cancel;
+	GSource *scan_thread_quit_timer;
 
 	/* scan all images */
 	GList *scan_all_item_list;
@@ -52,6 +56,7 @@ public:
 	unsigned int scan_single_curr_index;
 
 	void quitScanThread();
+	int createQuitTimerScanThread();
 	int getMmcState(void);
 	int prepareImageList();
 	int prepareImageListByPath(const char *file_path);
@@ -70,8 +75,10 @@ public:
 };
 
 namespace DcmScanCallback {
+	gboolean quitTimerAtScanThread(gpointer data);
 	void freeScanItem(void *data);
 	gboolean readyScanThreadIdle(gpointer data);
+	gboolean runScanThreadIdle(gpointer data);
 	gboolean readMsg(GIOChannel *src, GIOCondition condition, gpointer data);
 }
 
@@ -85,6 +92,51 @@ void DcmScanSvc::quitScanThread()
 	}
 
 	return;
+}
+
+gboolean DcmScanCallback::quitTimerAtScanThread(gpointer data)
+{
+	DcmScanSvc *dcmScanSvc = (DcmScanSvc *) data;
+
+	dcm_debug_fenter();
+
+	DCM_CHECK_FALSE(data);
+
+	if (dcmScanSvc->scan_all_curr_index != 0 || dcmScanSvc->scan_single_curr_index != 0) {
+		dcm_warn("Scan thread is working! DO NOT quit main thread!");
+		dcmScanSvc->createQuitTimerScanThread();
+	} else {
+		dcm_warn("Quit dcm-svc main loop!");
+		dcmScanSvc->quitScanThread();
+	}
+
+	dcm_debug_fleave();
+
+	return FALSE;
+}
+
+int DcmScanSvc::createQuitTimerScanThread()
+{
+	GSource *quit_timer = NULL;
+
+	dcm_debug_fenter();
+
+	if (scan_thread_quit_timer != NULL) {
+		dcm_debug("Delete old quit timer!");
+		g_source_destroy(scan_thread_quit_timer);
+		scan_thread_quit_timer = NULL;
+	}
+
+	quit_timer = g_timeout_source_new_seconds(DCM_SVC_SCAN_THREAD_TIMEOUT_SEC);
+	DCM_CHECK_VAL(quit_timer, DCM_ERROR_OUT_OF_MEMORY);
+
+	g_source_set_callback(quit_timer, DcmScanCallback::quitTimerAtScanThread, (gpointer)this, NULL);
+	g_source_attach(quit_timer, scan_thread_main_context);
+	scan_thread_quit_timer = quit_timer;
+
+	dcm_debug_fleave();
+
+	return DCM_SUCCESS;
 }
 
 int DcmScanSvc::getMmcState(void)
@@ -198,6 +250,7 @@ int DcmScanSvc::initialize()
 	scan_all_curr_index = 0;
 	scan_single_item_list = NULL;
 	scan_single_curr_index = 0;
+	g_scan_cancel = FALSE;
 
 	DcmFaceUtils::initialize();
 
@@ -306,9 +359,8 @@ int DcmScanSvc::runScanProcess(DcmScanItem *scan_item)
 
 		if (strcmp(scan_item->mime_type, MIME_TYPE_JPEG) == 0) {
 			image_format = DCM_IMAGE_FORMAT_RGB;
-		} else if (strcmp(scan_item->mime_type, MIME_TYPE_PNG) == 0) {
-			image_format = DCM_IMAGE_FORMAT_RGBA;
-		} else if (strcmp(scan_item->mime_type, MIME_TYPE_BMP) == 0) {
+		} else if ((strcmp(scan_item->mime_type, MIME_TYPE_PNG) == 0) ||
+				(strcmp(scan_item->mime_type, MIME_TYPE_BMP) == 0)) {
 			image_format = DCM_IMAGE_FORMAT_RGBA;
 		} else {
 			dcm_error("Failed not supported type! (%s)", scan_item->mime_type);
@@ -355,8 +407,6 @@ int DcmScanSvc::runScanProcess(DcmScanItem *scan_item)
 int DcmScanSvc::ScanAllItems()
 {
 	int ret = DCM_SUCCESS;
-	DcmScanItem *scan_item = NULL;
-	DcmDbUtils *dcmDbUtils = DcmDbUtils::getInstance();
 
 	dcm_debug_fenter();
 
@@ -372,29 +422,7 @@ int DcmScanSvc::ScanAllItems()
 	}
 
 	/* DCM scan started */
-	unsigned int list_len = g_list_length(scan_all_item_list);
-	while (scan_all_curr_index < list_len) {
-		scan_item = (DcmScanItem *)g_list_nth_data(scan_all_item_list, scan_all_curr_index);
-		dcm_sec_debug("current index: %d, path: %s", scan_all_curr_index, scan_item->file_path);
-
-		ret = runScanProcess(scan_item);
-		if (ret != DCM_SUCCESS) {
-			dcm_error("Failed to process scan job! err: %d", ret);
-
-			/* If the scan item is not scanned, insert media uuid into face_scan_list */
-			if (ret != DCM_ERROR_IMAGE_ALREADY_SCANNED) {
-				dcmDbUtils->_dcm_svc_db_insert_face_to_face_scan_list(scan_item);
-			}
-		}
-
-		(scan_all_curr_index)++;
-	}
-
-	dcm_warn("All images are scanned. Scan operation completed");
-
-	clearAllItemList();
-	/* Send scan complete message to main thread (if all scan operations are finished) */
-	sendCompletedMsg( NULL, DCM_IPC_PORT_DCM_RECV);
+	g_idle_add(DcmScanCallback::runScanThreadIdle, (gpointer)this);
 
 	dcm_debug_fleave();
 
@@ -454,7 +482,8 @@ int DcmScanSvc::terminateScanOperations()
 {
 	dcm_debug("Terminate scanning operations, and quit scan thread main loop");
 
-	quitScanThread();
+	g_scan_cancel = TRUE;
+	createQuitTimerScanThread();
 
 	return DCM_SUCCESS;
 }
@@ -465,6 +494,14 @@ int DcmScanSvc::receiveMsg(DcmIpcMsg *recv_msg)
 
 	DcmDbUtils *dcmDbUtils = DcmDbUtils::getInstance();
 	DCM_CHECK_VAL(recv_msg, DCM_ERROR_INVALID_PARAMETER);
+
+	dcm_debug("msg_type: %d", recv_msg->msg_type);
+
+	if (recv_msg->msg_type == DCM_IPC_MSG_KILL_SERVICE)
+	{
+		/* Destroy scan idles, and quit scan thread main loop */
+		terminateScanOperations();
+	}
 
 	ret = dcmDbUtils->_dcm_svc_db_connect(recv_msg->uid);
 	if (ret != MS_MEDIA_ERR_NONE) {
@@ -494,11 +531,6 @@ int DcmScanSvc::receiveMsg(DcmIpcMsg *recv_msg)
 			dcm_error("Invalid receive message!");
 			ret = DCM_ERROR_IPC_INVALID_MSG;
 		}
-	}
-	else if (recv_msg->msg_type == DCM_IPC_MSG_SCAN_TERMINATED)
-	{
-		/* Destroy scan idles, and quit scan thread main loop */
-		terminateScanOperations();
 	}
 	else {
 		dcm_error("Invalid message type!");
@@ -586,6 +618,47 @@ gboolean DcmScanCallback::readyScanThreadIdle(gpointer data)
 	dcm_debug_fleave();
 
 	return FALSE;
+}
+
+gboolean DcmScanCallback::runScanThreadIdle(gpointer data)
+{
+	int ret = DCM_SUCCESS;
+	DcmScanSvc *scanSvc = (DcmScanSvc *)data;
+	DcmScanItem *scan_item = NULL;
+	DcmDbUtils *dcmDbUtils = DcmDbUtils::getInstance();
+
+	dcm_debug_fenter();
+
+	DCM_CHECK_FALSE(scanSvc);
+	DCM_CHECK_FALSE(dcmDbUtils);
+
+	/* DCM scan started */
+	unsigned int list_len = g_list_length(scanSvc->scan_all_item_list);
+	if ((scanSvc->scan_all_curr_index < list_len) && !scanSvc->g_scan_cancel) {
+		scan_item = (DcmScanItem *)g_list_nth_data(scanSvc->scan_all_item_list, scanSvc->scan_all_curr_index);
+		dcm_sec_debug("current index: %d, path: %s state: %s", scanSvc->scan_all_curr_index, scan_item->file_path, (scanSvc->g_scan_cancel)?"cancel":"go");
+
+		ret = scanSvc->runScanProcess(scan_item);
+		if (ret != DCM_SUCCESS) {
+			dcm_error("Failed to process scan job! err: %d", ret);
+
+			/* If the scan item is not scanned, insert media uuid into face_scan_list */
+			if (ret != DCM_ERROR_IMAGE_ALREADY_SCANNED) {
+				dcmDbUtils->_dcm_svc_db_insert_face_to_face_scan_list(scan_item);
+			}
+		}
+
+		(scanSvc->scan_all_curr_index)++;
+	} else {
+		dcm_warn("All images are scanned. Scan operation completed");
+		scanSvc->clearAllItemList();
+		dcm_debug_fleave();
+		return FALSE;
+	}
+
+	dcm_debug_fleave();
+
+	return TRUE;
 }
 
 void DcmScanCallback::freeScanItem(void *data)
