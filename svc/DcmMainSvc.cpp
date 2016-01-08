@@ -67,6 +67,9 @@ void DcmMainSvc::dcmServiceStartjobs(void)
 void DcmMainSvc::dcmServiceFinishjobs(void)
 {
 	/* TODO: free resources for dcm-service */
+	if (DcmIpcUtils::sendSocketMsg(DCM_IPC_MSG_SERVICE_TERMINATED, 0, NULL, DCM_IPC_PORT_THUMB_RECV) != DCM_SUCCESS) {
+		dcm_error("Failed to send terminated message");
+	}
 }
 
 int DcmMainSvc::waitScanThreadReady()
@@ -173,13 +176,14 @@ gboolean DcmMainSvcCallBack::readMsg(GIOChannel *src, GIOCondition condition, gp
 		dcm_debug("scan thread is already running!");
 	}
 
-	if (recv_msg.msg_type == DCM_IPC_MSG_SCAN_COMPLETED) {
+	if ((recv_msg.msg_type == DCM_IPC_MSG_SCAN_COMPLETED) ||
+			(recv_msg.msg_type == DCM_IPC_MSG_SCAN_TERMINATED)) {
 		dcm_debug("Scan completed!");
 		dcmSvc->scan_thread_working = false;
 		dcmSvc->createQuitTimerMainLoop();
 	} else if (recv_msg.msg_type == DCM_IPC_MSG_KILL_SERVICE) {
 		dcm_warn("Quit dcm-svc main loop!");
-		dcmSvc->quitDcmSvcMainLoop();
+		ret = DcmIpcUtils::sendSocketMsg(DCM_IPC_MSG_KILL_SERVICE, recv_msg.uid, recv_msg.msg, DCM_IPC_PORT_SCAN_RECV);
 	} else if (recv_msg.msg_type == DCM_IPC_MSG_SCAN_ALL) {
 		ret = DcmIpcUtils::sendSocketMsg(DCM_IPC_MSG_SCAN_ALL, recv_msg.uid, NULL, DCM_IPC_PORT_SCAN_RECV);
 	} else if (recv_msg.msg_type == DCM_IPC_MSG_SCAN_SINGLE) {
@@ -207,7 +211,7 @@ gboolean DcmMainSvcCallBack::quitTimerAtMainLoop(gpointer data)
 		dcm_warn("Scan thread is working! DO NOT quit main thread!");
 	} else {
 		dcm_warn("Quit dcm-svc main loop!");
-		DcmIpcUtils::sendSocketMsg(DCM_IPC_MSG_KILL_SERVICE, 0, NULL, DCM_IPC_PORT_DCM_RECV);
+		dcmSvcApp->quitDcmSvcMainLoop();
 	}
 
 	dcm_debug_fleave();
