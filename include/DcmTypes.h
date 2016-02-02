@@ -55,27 +55,29 @@ typedef enum {
 } DcmErrorType;
 
 typedef enum {
-	DCM_IPC_MSG_NONE,
-	DCM_IPC_MSG_SERVICE_READY,
-	DCM_IPC_MSG_SERVICE_TERMINATED,
+	DCM_IPC_MSG_SCAN_SINGLE,
+	DCM_IPC_MSG_SCAN_ALL,
+	DCM_IPC_MSG_CANCEL,
+	DCM_IPC_MSG_CANCEL_ALL,
 	DCM_IPC_MSG_KILL_SERVICE,
 	DCM_IPC_MSG_SCAN_READY,
-	DCM_IPC_MSG_SCAN_ALL,
-	DCM_IPC_MSG_SCAN_SINGLE,
 	DCM_IPC_MSG_SCAN_COMPLETED,
 	DCM_IPC_MSG_SCAN_TERMINATED,
+	DCM_IPC_MSG_SERVICE_READY = 20,
+	DCM_IPC_MSG_SERVICE_COMPLETED,
 	DCM_IPC_MSG_MAX,
 } DcmIpcMsgType;
 
 typedef enum {
-	DCM_IPC_PORT_SCAN_RECV,
+	DCM_IPC_PORT_SCAN_RECV = 0,
 	DCM_IPC_PORT_DCM_RECV,
-	DCM_IPC_PORT_THUMB_RECV,
+	DCM_IPC_PORT_MS_RECV,
 	DCM_IPC_PORT_MAX,
 } DcmIpcPortType;
 
 typedef struct {
 	DcmIpcMsgType msg_type;
+	int pid;
 	uid_t uid;
 	size_t msg_size; /*this is size of message below and this does not include the terminationg null byte ('\0'). */
 	char msg[DCM_IPC_MSG_MAX_SIZE];

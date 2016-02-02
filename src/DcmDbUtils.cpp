@@ -234,18 +234,20 @@ int DcmDbUtils::_dcm_svc_db_disconnect(void)
 
 	dcm_warn("media db handle: %p", db_handle);
 
-	err = media_db_disconnect(db_handle);
-	if (err != MS_MEDIA_ERR_NONE) {
-		dcm_error("media_db_disconnect failed: %d", err);
-		db_handle = NULL;
-		return err;
+	if (db_handle != NULL) {
+		err = media_db_disconnect(db_handle);
+		if (err != MS_MEDIA_ERR_NONE) {
+			dcm_error("media_db_disconnect failed: %d", err);
+			db_handle = NULL;
+			return err;
+		}
 	}
 
 	db_handle = NULL;
 
 	dcm_debug_fleave();
 
-	return err;
+	return MS_MEDIA_ERR_NONE;
 }
 
 

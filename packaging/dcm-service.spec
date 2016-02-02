@@ -1,6 +1,6 @@
 Name:       dcm-service
 Summary:    A media DCM(Digital Contents Management) Service
-Version:    0.0.5
+Version:    0.0.6
 Release:    0
 Group:      Multimedia/Service
 License:    Apache-2.0
@@ -59,7 +59,7 @@ cp -rf %{_builddir}/%{name}-%{version}/LICENSE.APLv2.0 %{buildroot}/%{_datadir}/
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_libdir}/*.so*
-%{_bindir}/dcm-svc
+%{_bindir}/*
 %{_datadir}/license/%{name}
 
 %files devel

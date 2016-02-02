@@ -19,6 +19,7 @@
 
 #include "dcm-face.h"
 #include "dcm-face_priv.h"
+#include "dcm-face-debug.h"
 
 
 #define FACE_MAGIC_VALID	(0xFF993311)

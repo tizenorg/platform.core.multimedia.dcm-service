@@ -18,7 +18,6 @@
 
 #include <stdlib.h>
 #include <glib.h>
-#include "dcm-face-debug.h"
 
 #undef __in
 #define __in

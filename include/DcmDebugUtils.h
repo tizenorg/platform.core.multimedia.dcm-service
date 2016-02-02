@@ -87,6 +87,13 @@
 			} \
 		} while (0)
 
+#define ERR_BUF_LENGHT 256
+#define dcm_stderror(fmt) do { \
+					char dcm_stderror_buf[ERR_BUF_LENGHT] = {0, }; \
+					strerror_r(errno, dcm_stderror_buf, ERR_BUF_LENGHT); \
+					dcm_error(fmt" : standard error= [%s]", dcm_stderror_buf); \
+				} while (0)
+
 #define DCM_CHECK_VAL(expr, val) 		dcm_retvm_if(!(expr), val, "Invalid parameter, return ERROR code!")
 #define DCM_CHECK_NULL(expr) 			dcm_retvm_if(!(expr), NULL, "Invalid parameter, return NULL!")
 #define DCM_CHECK_FALSE(expr) 			dcm_retvm_if(!(expr), FALSE, "Invalid parameter, return FALSE!")
