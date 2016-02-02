@@ -46,6 +46,8 @@ public:
 	GMainContext *scan_thread_main_context;
 	gboolean g_scan_cancel;
 	GSource *scan_thread_quit_timer;
+	DcmDbUtils *dcmDBUtils;
+	uid_t g_uid;
 
 	/* scan all images */
 	GList *scan_all_item_list;
@@ -65,6 +67,7 @@ public:
 	int initialize();
 	int finalize();
 	int sendCompletedMsg(const char *msg, DcmIpcPortType port);
+	int sendTerminatedMsg();
 	int getScanStatus(DcmScanItem *scan_item, bool *media_scanned);
 	int runScanProcess(DcmScanItem *scan_item);
 	int ScanAllItems();
@@ -97,10 +100,16 @@ void DcmScanSvc::quitScanThread()
 gboolean DcmScanCallback::quitTimerAtScanThread(gpointer data)
 {
 	DcmScanSvc *dcmScanSvc = (DcmScanSvc *) data;
+	int ret;
 
 	dcm_debug_fenter();
 
 	DCM_CHECK_FALSE(data);
+
+	ret = DcmIpcUtils::sendSocketMsg(DCM_IPC_MSG_SCAN_TERMINATED, 0, NULL, DCM_IPC_PORT_DCM_RECV);
+	if (ret != DCM_SUCCESS) {
+		dcm_error("send to terminated messge to DCM Main");
+	}
 
 	if (dcmScanSvc->scan_all_curr_index != 0 || dcmScanSvc->scan_single_curr_index != 0) {
 		dcm_warn("Scan thread is working! DO NOT quit main thread!");
@@ -253,6 +262,7 @@ int DcmScanSvc::initialize()
 	g_scan_cancel = FALSE;
 
 	DcmFaceUtils::initialize();
+	dcmDBUtils = DcmDbUtils::getInstance();
 
 	return DCM_SUCCESS;
 }
@@ -283,6 +293,13 @@ int DcmScanSvc::sendCompletedMsg(const char *msg, DcmIpcPortType port)
 	}
 
 	return DCM_SUCCESS;
+}
+
+int DcmScanSvc::sendTerminatedMsg()
+{
+	dcm_debug("Terminated message is sent to DCM main...");
+
+	return ;
 }
 
 int DcmScanSvc::getScanStatus(DcmScanItem *scan_item, bool *media_scanned)
@@ -418,6 +435,10 @@ int DcmScanSvc::ScanAllItems()
 		clearAllItemList();
 		/* Send scan complete message to main thread (if all scan operations are finished) */
 		sendCompletedMsg( NULL, DCM_IPC_PORT_DCM_RECV);
+		ret = dcmDBUtils->_dcm_svc_db_disconnect();
+		if (ret != DCM_SUCCESS) {
+			dcm_error("Failed to disconnect db! err: %d", ret);
+		}
 		return DCM_SUCCESS;
 	}
 
@@ -483,16 +504,16 @@ int DcmScanSvc::terminateScanOperations()
 	dcm_debug("Terminate scanning operations, and quit scan thread main loop");
 
 	g_scan_cancel = TRUE;
-	createQuitTimerScanThread();
 
-	return DCM_SUCCESS;
+	return createQuitTimerScanThread();
 }
 
 int DcmScanSvc::receiveMsg(DcmIpcMsg *recv_msg)
 {
 	int ret = DCM_SUCCESS;
 
-	DcmDbUtils *dcmDbUtils = DcmDbUtils::getInstance();
+	dcmDBUtils = DcmDbUtils::getInstance();
+	g_uid = recv_msg->uid;
 	DCM_CHECK_VAL(recv_msg, DCM_ERROR_INVALID_PARAMETER);
 
 	dcm_debug("msg_type: %d", recv_msg->msg_type);
@@ -500,22 +521,29 @@ int DcmScanSvc::receiveMsg(DcmIpcMsg *recv_msg)
 	if (recv_msg->msg_type == DCM_IPC_MSG_KILL_SERVICE)
 	{
 		/* Destroy scan idles, and quit scan thread main loop */
-		terminateScanOperations();
+		ret = terminateScanOperations();
+		if (ret != DCM_SUCCESS) {
+			dcm_error("Failed to terminate DCM scan service! err: %d", ret);
+			return DCM_ERROR_DB_OPERATION;
+		}
+		return ret;
 	}
-
-	ret = dcmDbUtils->_dcm_svc_db_connect(recv_msg->uid);
-	if (ret != MS_MEDIA_ERR_NONE) {
-		dcm_error("Failed to connect DB! err: %d", ret);
-		return DCM_ERROR_DB_OPERATION;
-	}
-
-	if (recv_msg->msg_type == DCM_IPC_MSG_SCAN_ALL)
+	else if (recv_msg->msg_type == DCM_IPC_MSG_SCAN_ALL)
 	{
 		/* Use timer to scan all unscanned images */
+		ret = dcmDBUtils->_dcm_svc_db_connect(recv_msg->uid);
+		if (ret != DCM_SUCCESS) {
+			dcm_error("Failed to disconnect db! err: %d", ret);
+		}
 		ScanAllItems();
+		ret = dcmDBUtils->_dcm_svc_db_disconnect();
 	}
 	else if (recv_msg->msg_type == DCM_IPC_MSG_SCAN_SINGLE)
 	{
+		ret = dcmDBUtils->_dcm_svc_db_connect(recv_msg->uid);
+		if (ret != DCM_SUCCESS) {
+			dcm_error("Failed to connect db! err: %d", ret);
+		}
 		/* Create a scan idle if not exist, and scan single image of which file path is reveived from tcp socket */
 		if (recv_msg->msg_size > 0 && recv_msg->msg_size < DCM_IPC_MSG_MAX_SIZE) {
 			char *file_path = NULL;
@@ -531,16 +559,14 @@ int DcmScanSvc::receiveMsg(DcmIpcMsg *recv_msg)
 			dcm_error("Invalid receive message!");
 			ret = DCM_ERROR_IPC_INVALID_MSG;
 		}
+		ret = dcmDBUtils->_dcm_svc_db_disconnect();
+		if (ret != DCM_SUCCESS) {
+			dcm_error("Failed to disconnect db! err: %d", ret);
+		}
 	}
 	else {
-		dcm_error("Invalid message type!");
+		dcm_error("Invalid message type(%d)!", recv_msg->msg_type);
 		ret = DCM_ERROR_IPC_INVALID_MSG;
-	}
-
-	ret = dcmDbUtils->_dcm_svc_db_disconnect();
-	if (ret != DCM_SUCCESS) {
-		dcm_error("Failed to disconnect DB! err: %d", ret);
-		return DCM_ERROR_DB_OPERATION;
 	}
 
 	return ret;
@@ -632,6 +658,10 @@ gboolean DcmScanCallback::runScanThreadIdle(gpointer data)
 	DCM_CHECK_FALSE(scanSvc);
 	DCM_CHECK_FALSE(dcmDbUtils);
 
+	ret = scanSvc->dcmDBUtils->_dcm_svc_db_connect(scanSvc->g_uid);
+	if (ret != DCM_SUCCESS) {
+		dcm_error("Failed to disconnect db! err: %d", ret);
+	}
 	/* DCM scan started */
 	unsigned int list_len = g_list_length(scanSvc->scan_all_item_list);
 	if ((scanSvc->scan_all_curr_index < list_len) && !scanSvc->g_scan_cancel) {
@@ -652,8 +682,19 @@ gboolean DcmScanCallback::runScanThreadIdle(gpointer data)
 	} else {
 		dcm_warn("All images are scanned. Scan operation completed");
 		scanSvc->clearAllItemList();
+		ret = scanSvc->dcmDBUtils->_dcm_svc_db_disconnect();
+		if (ret != DCM_SUCCESS) {
+			dcm_error("Failed to disconnect db! err: %d", ret);
+		}
+		scanSvc->clearAllItemList();
+		/* Send scan complete message to main thread (if all scan operations are finished) */
+		scanSvc->sendCompletedMsg( NULL, DCM_IPC_PORT_DCM_RECV);
 		dcm_debug_fleave();
 		return FALSE;
+	}
+	ret = scanSvc->dcmDBUtils->_dcm_svc_db_disconnect();
+	if (ret != DCM_SUCCESS) {
+		dcm_error("Failed to disconnect db! err: %d", ret);
 	}
 
 	dcm_debug_fleave();

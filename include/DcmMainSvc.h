@@ -44,6 +44,7 @@ public:
 	int main_thread_recv_socket;
 	GSource *main_thread_quit_timer;
 	bool scan_thread_working;
+	int client_sock;
 
 	static DcmMainSvc *getInstance();
 	void dcmServiceStartjobs();

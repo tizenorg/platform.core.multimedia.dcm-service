@@ -23,6 +23,9 @@
 #include "dcm-face.h"
 #include "dcm-face_priv.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 typedef struct media_vision_h {
 	mv_engine_config_h cfg;
 	mv_source_h source;
@@ -191,6 +194,7 @@ int _face_detect_faces(__in dcm_face_h handle, __out face_rect_s *face_rect[], _
 	dcm_retvm_if(count == NULL, FACE_ERROR_OUT_OF_MEMORY, "invalid count");
 
 	mv_handle *_fengine = (mv_handle *)handle->fengine;
+	memset(&result, 0x00, sizeof(result));
 
 	__convert_to_mv_colorspace_e(handle->image_info->colorspace, &colorspace);
 
@@ -203,8 +207,10 @@ int _face_detect_faces(__in dcm_face_h handle, __out face_rect_s *face_rect[], _
 	}
 
 	err = mv_face_detect(_fengine->source, _fengine->cfg, (mv_face_detected_cb)__face_detected_cb, &result);
-
-/*	wait_for_async(); */
+	if (err != MEDIA_VISION_ERROR_NONE) {
+		dcm_error("Fail to mv_face_detect");
+		return __convert_to_mv_error_e(err);
+	}
 
 	if (result.error == FACE_ERROR_NONE) {
 		*face_rect = result.face_rect;

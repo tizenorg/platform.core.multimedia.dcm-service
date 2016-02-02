@@ -25,12 +25,8 @@ namespace DcmIpcUtils {
 	int acceptSocket(int serv_sock, int *client_sock);
 	int receiveSocketMsg(int client_sock, DcmIpcMsg *recv_msg);
 	int sendSocketMsg(DcmIpcMsgType msg_type, uid_t uid, const char *msg, DcmIpcPortType port);
+	int sendClientSocketMsg(int socket_fd, DcmIpcMsgType msg_type, uid_t uid, const char *msg, DcmIpcPortType port);
 	int closeSocket(int socket_fd);
-	int createUDPSocket(int *socket_fd);
-	int receiveUDPSocketMsg(int socket_fd, DcmIpcMsg *recv_msg);
-	int sendUDPSocketMsg(DcmIpcMsgType msg_type, const char *msg);
-	int closeUDPSocket(int socket_fd);
-	int sendFaceMsg(const char *media_uuid);
 }
 
 #endif /* _DCM_SVC_IPC_H_ */
