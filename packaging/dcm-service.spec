@@ -40,6 +40,11 @@ This package provides a media DCM(Digital Contents Management) service(Developme
 cp %{SOURCE1001} .
 
 %build
+
+export CFLAGS="$(echo $CFLAGS | sed 's/-Wl,--as-needed//g')"
+export CXXFLAGS="$(echo $CXXFLAGS | sed 's/-Wl,--as-needed//g')"
+export FFLAGS="$(echo $FFLAGS | sed 's/-Wl,--as-needed//g')"
+
 %cmake .
 make %{?jobs:-j%jobs}
 #export CFLAGS+=" -Wextra -Wno-array-bounds"
