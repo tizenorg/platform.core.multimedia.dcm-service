@@ -166,18 +166,24 @@ int _face_handle_destroy(__in void *handle)
 
 	mv_handle* _handle = (mv_handle*)handle;
 
+	dcm_retvm_if(_handle == NULL, FACE_ERROR_INVALID_PARAMTER, "invalid handle");
+
 	dcm_info("dcm_face_engine destroy. handle=0x%08x", handle);
 
-	err = mv_destroy_engine_config(_handle->cfg);
-	if (err != MEDIA_VISION_ERROR_NONE) {
-		dcm_error("Fail to mv_destroy_engine_config");
-		return __convert_to_mv_error_e(err);
+	if (_handle->cfg != NULL) {
+		err = mv_destroy_engine_config(_handle->cfg);
+		if (err != MEDIA_VISION_ERROR_NONE) {
+			dcm_error("Fail to mv_destroy_engine_config");
+			return __convert_to_mv_error_e(err);
+		}
 	}
 
-	err = mv_destroy_source(_handle->source);
-	if (err != MEDIA_VISION_ERROR_NONE) {
-		dcm_error("Fail to mv_destroy_source");
-		return __convert_to_mv_error_e(err);
+	if (_handle->source != NULL) {
+		err = mv_destroy_source(_handle->source);
+		if (err != MEDIA_VISION_ERROR_NONE) {
+			dcm_error("Fail to mv_destroy_source");
+			return __convert_to_mv_error_e(err);
+		}
 	}
 
 	return FACE_ERROR_NONE;
@@ -190,6 +196,7 @@ int _face_detect_faces(__in dcm_face_h handle, __out face_rect_s *face_rect[], _
 	mv_faceInfo result;
 
 	dcm_retvm_if(handle == NULL, FACE_ERROR_OUT_OF_MEMORY, "invalid handle");
+	dcm_retvm_if(handle->fengine == NULL, FACE_ERROR_OUT_OF_MEMORY, "invalid handle");
 	dcm_retvm_if(face_rect == NULL, FACE_ERROR_OUT_OF_MEMORY, "invalid face_rect");
 	dcm_retvm_if(count == NULL, FACE_ERROR_OUT_OF_MEMORY, "invalid count");
 

@@ -126,8 +126,6 @@ gboolean DcmScanCallback::quitTimerAtScanThread(gpointer data)
 
 int DcmScanSvc::createQuitTimerScanThread()
 {
-	GSource *quit_timer = NULL;
-
 	dcm_debug_fenter();
 
 	if (scan_thread_quit_timer != NULL) {
@@ -136,12 +134,11 @@ int DcmScanSvc::createQuitTimerScanThread()
 		scan_thread_quit_timer = NULL;
 	}
 
-	quit_timer = g_timeout_source_new_seconds(DCM_SVC_SCAN_THREAD_TIMEOUT_SEC);
-	DCM_CHECK_VAL(quit_timer, DCM_ERROR_OUT_OF_MEMORY);
+	scan_thread_quit_timer = g_timeout_source_new_seconds(DCM_SVC_SCAN_THREAD_TIMEOUT_SEC);
+	DCM_CHECK_VAL(scan_thread_quit_timer, DCM_ERROR_OUT_OF_MEMORY);
 
-	g_source_set_callback(quit_timer, DcmScanCallback::quitTimerAtScanThread, (gpointer)this, NULL);
-	g_source_attach(quit_timer, scan_thread_main_context);
-	scan_thread_quit_timer = quit_timer;
+	g_source_set_callback(scan_thread_quit_timer, DcmScanCallback::quitTimerAtScanThread, (gpointer)this, NULL);
+	g_source_attach(scan_thread_quit_timer, scan_thread_main_context);
 
 	dcm_debug_fleave();
 
@@ -260,6 +257,7 @@ int DcmScanSvc::initialize()
 	scan_single_item_list = NULL;
 	scan_single_curr_index = 0;
 	g_scan_cancel = FALSE;
+	scan_thread_quit_timer = NULL;
 
 	DcmFaceUtils::initialize();
 	dcmDBUtils = DcmDbUtils::getInstance();
