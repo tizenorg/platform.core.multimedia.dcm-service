@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 			return 0;
 		}
 
-		g_path = (char *)g_malloc(MAX_STRING_LEN * sizeof(char *));
+		g_path = (char *)g_malloc(MAX_STRING_LEN * sizeof(char));
 		memset(g_path, 0x00, MAX_STRING_LEN);
 		snprintf(g_path, MAX_STRING_LEN, "%s", argv[2]);
 
