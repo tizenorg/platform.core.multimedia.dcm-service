@@ -297,7 +297,7 @@ int DcmScanSvc::sendTerminatedMsg()
 {
 	dcm_debug("Terminated message is sent to DCM main...");
 
-	return ;
+	return DCM_SUCCESS;
 }
 
 int DcmScanSvc::getScanStatus(DcmScanItem *scan_item, bool *media_scanned)
