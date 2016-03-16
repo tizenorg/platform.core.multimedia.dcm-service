@@ -45,7 +45,7 @@ public:
 	GSource *main_thread_quit_timer;
 	bool scan_thread_working;
 
-	static DcmMainSvc *getInstance();
+	static DcmMainSvc *getInstance(void);
 	void dcmServiceStartjobs();
 	void dcmServiceFinishjobs();
 	int waitScanThreadReady();

@@ -36,7 +36,7 @@ private:
 
 public:
 	uid_t dcm_uid;
-	static DcmDbUtils *getInstance();
+	static DcmDbUtils *getInstance(void);
 	int _dcm_svc_db_connect(uid_t uid);
 	int _dcm_svc_db_disconnect();
 	int _dcm_svc_db_get_scan_image_list_by_path(GList **image_list, bool mmc_mounted, const char *file_path);

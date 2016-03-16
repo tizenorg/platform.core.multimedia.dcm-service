@@ -143,7 +143,6 @@ int DcmIpcUtils::sendClientSocketMsg(int socket_fd, DcmIpcMsgType msg_type, uid_
 	dcm_debug("Send message type: %d", msg_type);
 
 	DcmIpcMsg send_msg;
-	int err = 0;
 	int sock = -1;
 
 	if (socket_fd < 0) {

@@ -90,8 +90,7 @@
 #define ERR_BUF_LENGHT 256
 #define dcm_stderror(fmt) do { \
 					char dcm_stderror_buf[ERR_BUF_LENGHT] = {0, }; \
-					strerror_r(errno, dcm_stderror_buf, ERR_BUF_LENGHT); \
-					dcm_error(fmt" : standard error= [%s]", dcm_stderror_buf); \
+					LOGE(fmt" : standard error= [%s]", strerror_r(errno, dcm_stderror_buf, ERR_BUF_LENGHT)); \
 				} while (0)
 
 #define DCM_CHECK_VAL(expr, val) 		dcm_retvm_if(!(expr), val, "Invalid parameter, return ERROR code!")
