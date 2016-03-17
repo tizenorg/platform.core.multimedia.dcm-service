@@ -611,7 +611,7 @@ gboolean DcmScanCallback::readMsg(GIOChannel *src, GIOCondition condition, gpoin
 DCM_SVC_SCAN_READ_THREAD_RECV_SOCKET_FAILED:
 
 	if (close(client_sock) < 0) {
-		dcm_error("close failed [%s]", strerror(errno));
+		dcm_stderror("close failed");
 	}
 
 	return TRUE;

@@ -198,7 +198,7 @@ gboolean DcmMainSvcCallBack::readMsg(GIOChannel *src, GIOCondition condition, gp
 	}
 
 	if (DcmIpcUtils::closeSocket(client_sock) < 0) {
-		dcm_error("close failed [%s]", strerror(errno));
+		dcm_stderror("close failed");
 	}
 
 	return TRUE;
