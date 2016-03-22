@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	g_command = (char *)g_malloc(MAX_STRING_LEN * sizeof(char *));
+	g_command = (char *)g_malloc(MAX_STRING_LEN * sizeof(char));
 	memset(g_command, 0x00, MAX_STRING_LEN);
 	snprintf(g_command, MAX_STRING_LEN, "%s", argv[1]);
 
