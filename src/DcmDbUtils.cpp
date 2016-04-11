@@ -52,7 +52,7 @@ static int __dcm_svc_sql_prepare_to_step(sqlite3 *handle, const char *sql_str, s
 static int __dcm_svc_sql_prepare_to_step_simple(sqlite3 *handle, const char *sql_str, sqlite3_stmt** stmt);
 }
 
-static DcmDbUtils* DcmDbUtils::getInstance(void)
+DcmDbUtils* DcmDbUtils::getInstance(void)
 {
 	if (dcmDbUtils == NULL) {
 		g_mutex_trylock(&gMutexLock);

@@ -41,7 +41,7 @@ DcmMainSvc *DcmMainSvc::dcmMainSvc = NULL;
 GMainLoop *g_dcm_svc_mainloop;
 static GMutex gMutexLock;
 
-static DcmMainSvc* DcmMainSvc::getInstance(void)
+DcmMainSvc* DcmMainSvc::getInstance(void)
 {
 	if (dcmMainSvc == NULL) {
 		g_mutex_trylock(&gMutexLock);
