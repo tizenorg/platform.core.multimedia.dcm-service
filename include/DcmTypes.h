@@ -107,7 +107,7 @@ typedef enum {
 
 typedef enum {
 	DCM_FACE_ITEM_INSERT		= 0,	/**< Database update operation is INSERT */
-	DCM_FACE_ITEM_DELETE 		= 1,	/**< Database update operation is DELETE */
+	DCM_FACE_ITEM_DELETE		= 1,	/**< Database update operation is DELETE */
 	DCM_FACE_ITEM_UPDATE		= 2,	/**< Database update operation is UPDATE */
 	DCM_FACE_ITEM_REMOVE		= 3,	/**< Database update operation is REMOVE */
 } DcmFaceItemUpdateType;
@@ -137,7 +137,7 @@ typedef enum {
 } DcmImageDecodeType;
 
 typedef struct {
-	unsigned char *pixel; 		/* decoding results, must be freed after use */
+	unsigned char *pixel;		/* decoding results, must be freed after use */
 	unsigned long long size;
 	int orientation;			/* orientation information extracted from exif */
 	unsigned int original_width;			/* original image width */

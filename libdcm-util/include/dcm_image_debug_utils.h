@@ -77,7 +77,7 @@
 	} while (0)
 
 #define dcm_retm_if(expr, fmt, arg...) do { \
-		if(expr) { \
+		if (expr) { \
 			dcm_error(fmt, ##arg); \
 		dcm_error("(%s) -> %s() return", #expr, __FUNCTION__); \
 			return; \
@@ -85,7 +85,7 @@
 	} while (0)
 
 #define dcm_retvm_if(expr, val, fmt, arg...) do { \
-		if(expr) { \
+		if (expr) { \
 			dcm_error(fmt, ##arg); \
 		dcm_error("(%s) -> %s() return", #expr, __FUNCTION__); \
 			return (val); \
@@ -98,11 +98,11 @@
 		LOGE(fmt" : standard error= [%s]", strerror_r(errno, dcm_stderror_buf, ERR_BUF_LENGHT)); \
 	} while (0)
 
-#define DCM_CHECK_VAL(expr, val) 		dcm_retvm_if(!(expr), val , "Invalid parameter, return ERROR code!")
-#define DCM_CHECK_NULL(expr) 			dcm_retvm_if(!(expr), NULL, "Invalid parameter, return NULL!")
-#define DCM_CHECK_FALSE(expr) 			dcm_retvm_if(!(expr), FALSE, "Invalid parameter, return FALSE!")
-#define DCM_CHECK(expr) 				dcm_retm_if (!(expr), "Invalid parameter, return!")
+#define DCM_CHECK_VAL(expr, val)		dcm_retvm_if(!(expr), val , "Invalid parameter, return ERROR code!")
+#define DCM_CHECK_NULL(expr)			dcm_retvm_if(!(expr), NULL, "Invalid parameter, return NULL!")
+#define DCM_CHECK_FALSE(expr)			dcm_retvm_if(!(expr), FALSE, "Invalid parameter, return FALSE!")
+#define DCM_CHECK(expr)					dcm_retm_if(!(expr), "Invalid parameter, return!")
 
-#define DCM_SAFE_FREE(ptr) { if(ptr) {free(ptr); ptr = NULL;} }
+#define DCM_SAFE_FREE(ptr) { if (ptr) {free(ptr); ptr = NULL; } }
 
 #endif /* _DCM_DEBUG_UTILS_H_ */

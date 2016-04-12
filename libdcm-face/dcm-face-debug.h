@@ -72,14 +72,14 @@
 			LOGD(FONT_COLOR_RESET"<Leave>"); \
 		} while (0)
 #define dcm_retm_if(expr, fmt, arg...) do { \
-			if(expr) { \
+			if (expr) { \
 				LOGE(FONT_COLOR_RED""fmt""FONT_COLOR_RESET, ##arg); \
 				return; \
 			} \
 		} while (0)
 
 #define dcm_retvm_if(expr, val, fmt, arg...) do { \
-			if(expr) { \
+			if (expr) { \
 				LOGE(FONT_COLOR_RED""fmt""FONT_COLOR_RESET, ##arg); \
 				return (val); \
 			} \

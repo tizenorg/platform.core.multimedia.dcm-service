@@ -51,8 +51,8 @@ typedef enum {
  */
 typedef enum {
 	FACE_IMAGE_COLORSPACE_YUV420,			/**< Y:U:V = 4:2:0 */
-	FACE_IMAGE_COLORSPACE_RGB888,			/**< RGB565, high-byte is Blue 	*/
-	FACE_IMAGE_COLORSPACE_RGBA,			/**< RGBA8888 */
+	FACE_IMAGE_COLORSPACE_RGB888,			/**< RGB565, high-byte is Blue */
+	FACE_IMAGE_COLORSPACE_RGBA,				/**< RGBA8888 */
 } face_image_colorspace_e;
 
 /**
