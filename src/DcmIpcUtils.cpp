@@ -34,9 +34,9 @@
 #include <DcmDebugUtils.h>
 
 static char DCM_IPC_PATH[][100] = {
-			{"/tmp/media-server/dcm_ipc_scanthread.socket"},
-			{"/tmp/media-server/media_ipc_dcmdaemon.socket"},
-			{"/tmp/media-server/media_ipc_dcmcomm.socket"},
+			{"/var/run/media-server/dcm_ipc_scanthread.socket"},
+			{"/var/run/media-server/media_ipc_dcmdaemon.socket"},
+			{"/var/run/media-server/media_ipc_dcmcomm.socket"},
 };
 
 int DcmIpcUtils::receiveSocketMsg(int client_sock, DcmIpcMsg *recv_msg)
