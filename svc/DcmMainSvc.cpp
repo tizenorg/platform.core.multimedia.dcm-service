@@ -58,6 +58,11 @@ DcmMainSvc* DcmMainSvc::getInstance(void)
 
 void DcmMainSvc::dcmServiceStartjobs(void)
 {
+	if (createScanThread() != DCM_SUCCESS) {
+		dcm_error("Failed to create scan thread! Exit main thread...");
+		return TRUE;
+	}
+
 	/* Send ready response to dcm launcher */
 	if (DcmIpcUtils::sendClientSocketMsg(-1, DCM_IPC_MSG_SERVICE_READY, 0, NULL, DCM_IPC_PORT_MS_RECV) != DCM_SUCCESS) {
 		dcm_error("Failed to send ready message");
@@ -179,7 +184,7 @@ gboolean DcmMainSvcCallBack::readMsg(GIOChannel *src, GIOCondition condition, gp
 		dcmSvc->createQuitTimerMainLoop();
 	} else if (recv_msg.msg_type == DCM_IPC_MSG_SCAN_COMPLETED) {
 		dcm_debug("Scan completed!");
-		ret = DcmIpcUtils::sendClientSocketMsg(-1, DCM_IPC_MSG_SERVICE_COMPLETED, recv_msg.uid, recv_msg.msg, DCM_IPC_PORT_MS_RECV);
+		ret = DcmIpcUtils::sendClientSocketMsg(-1, DCM_IPC_MSG_SERVICE_COMPLETED, recv_msg.result, recv_msg.msg, DCM_IPC_PORT_MS_RECV);
 	} else if (recv_msg.msg_type == DCM_IPC_MSG_KILL_SERVICE) {
 		dcm_warn("Quit dcm-svc main loop!");
 		ret = DcmIpcUtils::sendSocketMsg(DCM_IPC_MSG_KILL_SERVICE, recv_msg.uid, recv_msg.msg, DCM_IPC_PORT_SCAN_RECV);
@@ -190,11 +195,11 @@ gboolean DcmMainSvcCallBack::readMsg(GIOChannel *src, GIOCondition condition, gp
 		}
 	} else if (recv_msg.msg_type == DCM_IPC_MSG_SCAN_SINGLE) {
 		ret = DcmIpcUtils::sendSocketMsg(DCM_IPC_MSG_SCAN_SINGLE, recv_msg.uid, recv_msg.msg, DCM_IPC_PORT_SCAN_RECV);
-		if (ret == DCM_SUCCESS) {
+/*		if (ret == DCM_SUCCESS) {
 			ret = DcmIpcUtils::sendClientSocketMsg(client_sock, DCM_IPC_MSG_SCAN_SINGLE, recv_msg.uid, recv_msg.msg, DCM_IPC_PORT_DCM_RECV);
-		}
+		}*/
 	} else {
-		dcm_debug("createDcmSvcReadSocket, invalid message.");
+		dcm_debug("createDcmSvcReadSocket, invalid message(%d).", recv_msg.msg_type);
 	}
 
 	if (DcmIpcUtils::closeSocket(client_sock) < 0) {

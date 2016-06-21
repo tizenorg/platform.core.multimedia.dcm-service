@@ -122,8 +122,10 @@ int DcmFaceUtils::runFaceRecognizeProcess(DcmScanItem *scan_item, DcmImageInfo *
 
 	dcm_warn("detected face count: %d", face_info->count);
 	if (face_info->count <= 0) {
+		scan_item->face_count = 0;
 		goto DCM_SVC_FACE_RECOGNIZE_BUFFER_FAILED;
 	}
+	scan_item->face_count = face_info->count;
 
 	/* Compute scale factor between decode size and original size */
 	scale_factor = DcmFaceApi::caculateScaleFactor(image_info);

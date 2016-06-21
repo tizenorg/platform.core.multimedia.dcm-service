@@ -81,6 +81,7 @@ typedef struct {
 	uid_t uid;
 	size_t msg_size; /*this is size of message below and this does not include the terminationg null byte ('\0'). */
 	char msg[DCM_IPC_MSG_MAX_SIZE];
+	int result;
 } DcmIpcMsg;
 
 typedef enum {
@@ -98,6 +99,7 @@ typedef struct {
 	int image_height;
 	int image_orientation;
 	char *mime_type;
+	int face_count;
 	DcmScanItemType scan_item_type;
 } DcmScanItem;
 

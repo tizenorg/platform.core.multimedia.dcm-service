@@ -25,7 +25,8 @@ namespace DcmIpcUtils {
 	int acceptSocket(int serv_sock, int *client_sock);
 	int receiveSocketMsg(int client_sock, DcmIpcMsg *recv_msg);
 	int sendSocketMsg(DcmIpcMsgType msg_type, uid_t uid, const char *msg, DcmIpcPortType port);
-	int sendClientSocketMsg(int socket_fd, DcmIpcMsgType msg_type, uid_t uid, const char *msg, DcmIpcPortType port);
+	int sendCompleteMsg(DcmIpcMsgType msg_type, const unsigned int count, const char *msg, DcmIpcPortType port);
+	int sendClientSocketMsg(int socket_fd, DcmIpcMsgType msg_type, unsigned int result, const char *msg, DcmIpcPortType port);
 	int closeSocket(int socket_fd);
 }
 

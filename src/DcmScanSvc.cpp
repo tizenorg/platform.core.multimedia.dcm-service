@@ -66,7 +66,7 @@ public:
 	int clearSingleItemList();
 	int initialize();
 	int finalize();
-	int sendCompletedMsg(const char *msg, DcmIpcPortType port);
+	int sendCompletedMsg(const char *msg, const unsigned int count, DcmIpcPortType port);
 	int sendTerminatedMsg();
 	int getScanStatus(DcmScanItem *scan_item, bool *media_scanned);
 	int runScanProcess(DcmScanItem *scan_item);
@@ -275,11 +275,11 @@ int DcmScanSvc::finalize()
 	return DCM_SUCCESS;
 }
 
-int DcmScanSvc::sendCompletedMsg(const char *msg, DcmIpcPortType port)
+int DcmScanSvc::sendCompletedMsg(const char *msg, const unsigned int count, DcmIpcPortType port)
 {
 	if ((scan_all_item_list == NULL) && (scan_single_item_list == NULL)) {
 		dcm_debug("Send completed message");
-		DcmIpcUtils::sendSocketMsg(DCM_IPC_MSG_SCAN_COMPLETED, 0, msg, port);
+		DcmIpcUtils::sendCompleteMsg(DCM_IPC_MSG_SCAN_COMPLETED, count, msg, port);
 	} else {
 		if (scan_all_item_list)
 			dcm_warn("scan_all_item_list");
@@ -432,7 +432,7 @@ int DcmScanSvc::ScanAllItems()
 		dcm_debug("No items to Scan. Scan operation completed!!!");
 		clearAllItemList();
 		/* Send scan complete message to main thread (if all scan operations are finished) */
-		sendCompletedMsg( NULL, DCM_IPC_PORT_DCM_RECV);
+		sendCompletedMsg( NULL, 0, DCM_IPC_PORT_DCM_RECV);
 		ret = dcmDBUtils->_dcm_svc_db_disconnect();
 		if (ret != DCM_SUCCESS) {
 			dcm_error("Failed to disconnect db! err: %d", ret);
@@ -465,7 +465,7 @@ int DcmScanSvc::ScanSingleItem(const char *file_path)
 		dcm_debug("No items to Scan. Scan operation completed!!!");
 		clearSingleItemList();
 		/* Send scan complete message to main thread (if all scan operations are finished) */
-		sendCompletedMsg( file_path/*ret*/, DCM_IPC_PORT_DCM_RECV);
+		sendCompletedMsg( file_path/*ret*/, 0, DCM_IPC_PORT_DCM_RECV);
 		return DCM_SUCCESS;
 	}
 
@@ -489,6 +489,8 @@ int DcmScanSvc::ScanSingleItem(const char *file_path)
 
 		(scan_single_curr_index)++;
 	}
+
+	sendCompletedMsg( file_path/*ret*/, scan_item->face_count, DCM_IPC_PORT_DCM_RECV);
 
 	clearSingleItemList();
 
@@ -686,7 +688,7 @@ gboolean DcmScanCallback::runScanThreadIdle(gpointer data)
 		}
 		scanSvc->clearAllItemList();
 		/* Send scan complete message to main thread (if all scan operations are finished) */
-		scanSvc->sendCompletedMsg( NULL, DCM_IPC_PORT_DCM_RECV);
+		scanSvc->sendCompletedMsg( NULL, 0, DCM_IPC_PORT_DCM_RECV);
 		dcm_debug_fleave();
 		return FALSE;
 	}

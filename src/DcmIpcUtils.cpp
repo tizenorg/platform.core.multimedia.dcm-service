@@ -134,7 +134,7 @@ int DcmIpcUtils::createSocket(int *socket_fd, DcmIpcPortType port)
 	return DCM_SUCCESS;
 }
 
-int DcmIpcUtils::sendClientSocketMsg(int socket_fd, DcmIpcMsgType msg_type, uid_t uid, const char *msg, DcmIpcPortType port)
+int DcmIpcUtils::sendClientSocketMsg(int socket_fd, DcmIpcMsgType msg_type, unsigned int result, const char *msg, DcmIpcPortType port)
 {
 	if (port < 0 || port >= DCM_IPC_PORT_MAX) {
 		dcm_error("Invalid port! Stop sending message...");
@@ -177,7 +177,7 @@ int DcmIpcUtils::sendClientSocketMsg(int socket_fd, DcmIpcMsgType msg_type, uid_
 	/* Prepare send message */
 	memset((void *)&send_msg, 0, sizeof(DcmIpcMsg));
 	send_msg.msg_type = msg_type;
-	send_msg.uid = uid;
+	send_msg.result = result;
 	if (msg != NULL) {
 		send_msg.msg_size = strlen(msg);
 		strncpy(send_msg.msg, msg, send_msg.msg_size);
@@ -259,6 +259,64 @@ int DcmIpcUtils::sendSocketMsg(DcmIpcMsgType msg_type, uid_t uid, const char *ms
 	close(socket_fd);
 	return DCM_SUCCESS;
 }
+
+int DcmIpcUtils::sendCompleteMsg(DcmIpcMsgType msg_type, const unsigned int count, const char *msg, DcmIpcPortType port)
+{
+	if (port < 0 || port >= DCM_IPC_PORT_MAX) {
+		dcm_error("Invalid port! Stop sending message...");
+		return DCM_ERROR_INVALID_PARAMETER;
+	}
+	dcm_debug("Send message type: %d", msg_type);
+
+	int socket_fd = -1;
+	struct sockaddr_un serv_addr;
+	//struct timeval tv_timeout = { 10, 0 }; /* timeout: 10 seconds */
+	DcmIpcMsg send_msg;
+
+	/* Prepare send message */
+	memset((void *)&send_msg, 0, sizeof(DcmIpcMsg));
+	send_msg.msg_type = msg_type;
+	send_msg.result = count;
+	if (msg != NULL) {
+		send_msg.msg_size = strlen(msg);
+		strncpy(send_msg.msg, msg, send_msg.msg_size);
+	}
+
+	/* If message size is larget than max_size, then message is invalid */
+	if (send_msg.msg_size >= DCM_IPC_MSG_MAX_SIZE) {
+		dcm_error("Message size is invalid!");
+		return DCM_ERROR_NETWORK;
+	}
+
+	/* Create a new TCP socket */
+	if ((socket_fd = socket(PF_FILE, SOCK_STREAM, 0)) < 0) {
+		dcm_stderror("socket failed");
+		return DCM_ERROR_NETWORK;
+	}
+
+	/* Set dcm thread socket address */
+	memset(&serv_addr, 0, sizeof(serv_addr));
+	serv_addr.sun_family = AF_UNIX;
+	strncpy(serv_addr.sun_path, DCM_IPC_PATH[port], sizeof(serv_addr.sun_path) - 1);
+
+	/* Connect to the socket */
+	if (connect(socket_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+		dcm_stderror("connect error");
+		close(socket_fd);
+		return DCM_ERROR_NETWORK;
+	}
+
+	/* Send msg to the socket */
+	if (send(socket_fd, &send_msg, sizeof(send_msg), 0) != sizeof(send_msg)) {
+		dcm_stderror("send failed");
+		close(socket_fd);
+		return DCM_ERROR_NETWORK;
+	}
+
+	close(socket_fd);
+	return DCM_SUCCESS;
+}
+
 
 int DcmIpcUtils::closeSocket(int socket_fd)
 {
