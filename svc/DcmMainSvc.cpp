@@ -60,7 +60,6 @@ void DcmMainSvc::dcmServiceStartjobs(void)
 {
 	if (createScanThread() != DCM_SUCCESS) {
 		dcm_error("Failed to create scan thread! Exit main thread...");
-		return TRUE;
 	}
 
 	/* Send ready response to dcm launcher */
