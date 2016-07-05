@@ -22,6 +22,7 @@
 
 namespace DcmScanMain {
 	gboolean runScanThread(void *data);
+	int ScanSingle(const char *file_path, uid_t uid, int *face_count);
 }
 
 #endif /* _DCM_SCAN_SVC_H_ */

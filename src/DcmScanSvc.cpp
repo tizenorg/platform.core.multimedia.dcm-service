@@ -499,6 +499,82 @@ int DcmScanSvc::ScanSingleItem(const char *file_path)
 	return DCM_SUCCESS;
 }
 
+int DcmScanMain::ScanSingle(const char *file_path, uid_t uid, int *face_count)
+{
+	int ret = DCM_SUCCESS;
+	DcmScanSvc dcmScanSvc;
+	DcmScanItem *scan_item = NULL;
+	unsigned int list_len = 0;
+
+	DCM_CHECK_VAL(file_path, DCM_ERROR_INVALID_PARAMETER);
+	DCM_CHECK_VAL(face_count, DCM_ERROR_INVALID_PARAMETER);
+
+	dcm_debug_fenter();
+
+	/* Init global variables */
+	ret = dcmScanSvc.initialize();
+	if (ret != DCM_SUCCESS) {
+		dcm_error("Failed to initialize scan thread global variable! err: %d", ret);
+		goto DCM_SVC_SCAN_SINGLE_FAILED;
+	}
+	dcmScanSvc.clearSingleItemList();
+
+	ret = dcmScanSvc.dcmDBUtils->_dcm_svc_db_connect(uid);
+	if (ret != DCM_SUCCESS) {
+		dcm_error("Failed to connect db! err: %d", ret);
+	}
+
+	ret = dcmScanSvc.prepareImageListByPath(file_path);
+	if (ret == DCM_ERROR_DB_NO_RESULT) {
+		dcm_debug("No items to Scan. Scan operation completed!!!");
+		dcmScanSvc.clearSingleItemList();
+		goto DCM_SVC_SCAN_SINGLE_FAILED;
+	}
+
+	dcm_debug("append scan item to scan item list");
+
+	/* DCM scan started */
+	list_len = (unsigned int)g_list_length(dcmScanSvc.scan_single_item_list);
+	if (dcmScanSvc.scan_single_curr_index < list_len) {
+		scan_item = (DcmScanItem *)g_list_nth_data(dcmScanSvc.scan_single_item_list, dcmScanSvc.scan_single_curr_index);
+		dcm_sec_debug("current index: %d, path: %s, scan type: %d", dcmScanSvc.scan_single_curr_index, scan_item->file_path, scan_item->scan_item_type);
+
+		ret = dcmScanSvc.runScanProcess(scan_item);
+		if (ret != DCM_SUCCESS) {
+			dcm_error("Failed to process scan job! err: %d", ret);
+
+			/* If the scan item is not scanned, insert media uuid into face_scan_list */
+			if (ret != DCM_ERROR_IMAGE_ALREADY_SCANNED) {
+				dcmScanSvc.dcmDBUtils->_dcm_svc_db_insert_face_to_face_scan_list(scan_item);
+			}
+		}
+
+		(dcmScanSvc.scan_single_curr_index)++;
+	}
+
+DCM_SVC_SCAN_SINGLE_FAILED:
+	ret = dcmScanSvc.dcmDBUtils->_dcm_svc_db_disconnect();
+	if (ret != DCM_SUCCESS) {
+		dcm_error("Failed to disconnect db! err: %d", ret);
+	}
+
+	if (scan_item != NULL)
+		*face_count = scan_item->face_count;
+	else
+		*face_count = 0;
+
+	dcm_debug("*face_count is %d", *face_count);
+	dcmScanSvc.clearSingleItemList();
+
+	ret = dcmScanSvc.finalize();
+	if (ret != DCM_SUCCESS) {
+		dcm_error("Failed to de-initialize scan thread global variable! err: %d", ret);
+	}
+	dcm_debug_fleave();
+
+	return DCM_SUCCESS;
+}
+
 int DcmScanSvc::terminateScanOperations()
 {
 	dcm_debug("Terminate scanning operations, and quit scan thread main loop");
