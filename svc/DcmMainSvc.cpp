@@ -197,7 +197,7 @@ gboolean DcmMainSvcCallBack::readMsg(GIOChannel *src, GIOCondition condition, gp
 		dcm_debug("Scan single");
 		ret = DcmScanMain::ScanSingle(recv_msg.msg, recv_msg.uid, &face_count);
 		dcm_debug("Scan single result: %d", face_count);
-		ret = DcmIpcUtils::sendClientSocketMsg(-1, 0, face_count, recv_msg.msg, DCM_IPC_PORT_MS_RECV);
+		ret = DcmIpcUtils::sendClientSocketMsg(-1, DCM_IPC_MSG_SCAN_SINGLE, face_count, recv_msg.msg, DCM_IPC_PORT_MS_RECV);
 		//ret = DcmIpcUtils::sendSocketMsg(DCM_IPC_MSG_SCAN_SINGLE, recv_msg.uid, recv_msg.msg, DCM_IPC_PORT_SCAN_RECV);
 /*		if (ret == DCM_SUCCESS) {
 			ret = DcmIpcUtils::sendClientSocketMsg(client_sock, DCM_IPC_MSG_SCAN_SINGLE, recv_msg.uid, recv_msg.msg, DCM_IPC_PORT_DCM_RECV);

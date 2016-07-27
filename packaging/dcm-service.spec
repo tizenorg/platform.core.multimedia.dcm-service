@@ -1,6 +1,6 @@
 Name:       dcm-service
 Summary:    A media DCM(Digital Contents Management) Service
-Version:    0.0.12
+Version:    0.0.13
 Release:    0
 Group:      Multimedia/Service
 License:    Apache-2.0
